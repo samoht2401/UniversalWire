@@ -7,12 +7,11 @@ import java.util.ArrayList;
 
 import net.minecraft.nbt.NBTTagCompound;
 
+import samoht2401.universalwire.network.ISerializable;
 import samoht2401.universalwire.system.BufferManager;
 import samoht2401.universalwire.system.System;
 
-import buildcraft.core.network.IClientState;
-
-public class RenderInfoSystem implements IClientState {
+public class RenderInfoSystem implements ISerializable {
 
 	public static ArrayList<RenderInfoSystem> infos;
 
@@ -53,14 +52,14 @@ public class RenderInfoSystem implements IClientState {
 		buffer = new BufferManager();
 		buffer.readData(data);
 	}
-	
+
 	public void writeToNBT(NBTTagCompound comp) {
 		comp.setInteger("id", id);
 		NBTTagCompound tag = new NBTTagCompound();
 		buffer.writeToNBT(tag);
 		comp.setCompoundTag("buffer", tag);
 	}
-	
+
 	public void readFromNBT(NBTTagCompound comp) {
 		id = comp.getInteger("id");
 		buffer = new BufferManager();

@@ -33,7 +33,7 @@ public abstract class UWPacket {
 		return packet;
 	}
 
-	public abstract void readData(DataInputStream data) throws IOException;
+	public abstract void readData(DataInputStream data, Object instance) throws IOException;
 
 	public abstract void writeData(DataOutputStream data) throws IOException;
 

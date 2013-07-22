@@ -5,12 +5,19 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import buildcraft.core.network.IClientState;
+import org.apache.commons.lang3.text.WordUtils;
+
+import samoht2401.universalwire.network.ISerializable;
 
 import net.minecraft.util.Icon;
+import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
-public class RenderInfoCable implements IClientState {
+public class RenderInfoCable implements ISerializable {
+
+	public int x;
+	public int y;
+	public int z;
 	public int systemId;
 	public Icon[] textures;
 	public ArrayList<ForgeDirection> connections;
@@ -18,6 +25,9 @@ public class RenderInfoCable implements IClientState {
 	@Override
 	public RenderInfoCable clone() {
 		RenderInfoCable result = new RenderInfoCable();
+		result.x = x;
+		result.y = y;
+		result.z = z;
 		result.systemId = systemId;
 		result.textures = this.textures;
 		result.connections = new ArrayList<ForgeDirection>();
@@ -26,7 +36,10 @@ public class RenderInfoCable implements IClientState {
 
 	@Override
 	public void writeData(DataOutputStream data) throws IOException {
-		data.write(systemId);
+		data.writeInt(x);
+		data.writeInt(y);
+		data.writeInt(z);
+		data.writeInt(systemId);
 		data.writeInt(connections.size());
 		for (ForgeDirection dir : connections) {
 			data.writeInt(dir.ordinal());
@@ -35,7 +48,10 @@ public class RenderInfoCable implements IClientState {
 
 	@Override
 	public void readData(DataInputStream data) throws IOException {
-		systemId = data.read();
+		x = data.readInt();
+		y = data.readInt();
+		z = data.readInt();
+		systemId = data.readInt();
 		int coSize = data.readInt();
 		connections = new ArrayList<ForgeDirection>();
 		for (int i = 0; i < coSize; i++) {

@@ -6,7 +6,6 @@ import java.util.List;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import samoht2401.universalwire.UniversalWire;
-import samoht2401.universalwire.model.ModelCable;
 import samoht2401.universalwire.render.RenderInfoCable;
 import samoht2401.universalwire.system.ItemType;
 import samoht2401.universalwire.system.SystemManager;
@@ -67,10 +66,10 @@ public class BlockCable extends BlockContainer {
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IconRegister par1IconRegister) {
 		genericRenderInfo.textures = new Icon[4];
-		genericRenderInfo.textures[CABLE_TEX_INDEX] = par1IconRegister.registerIcon("UniversalWire:cable");
-		genericRenderInfo.textures[CABLEB_TEX_INDEX] = par1IconRegister.registerIcon("UniversalWire:cableBranche");
-		genericRenderInfo.textures[CABLEI_TEX_INDEX] = par1IconRegister.registerIcon("UniversalWire:cableItem");
-		genericRenderInfo.textures[REDL_TEX_INDEX] = par1IconRegister.registerIcon("UniversalWire:redstoneLiquid");
+		genericRenderInfo.textures[CABLE_TEX_INDEX] = par1IconRegister.registerIcon("universalwire:cable");
+		genericRenderInfo.textures[CABLEB_TEX_INDEX] = par1IconRegister.registerIcon("universalwire:cableBranche");
+		genericRenderInfo.textures[CABLEI_TEX_INDEX] = par1IconRegister.registerIcon("universalwire:cableItem");
+		genericRenderInfo.textures[REDL_TEX_INDEX] = par1IconRegister.registerIcon("universalwire:redstoneLiquid");
 		genericRenderInfo.connections = new ArrayList<ForgeDirection>();
 
 		for (int i = 0; i < 7; i++) {

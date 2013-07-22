@@ -10,32 +10,33 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.common.ForgeDirection;
-import net.minecraftforge.liquids.ILiquidTank;
-import net.minecraftforge.liquids.ITankContainer;
-import net.minecraftforge.liquids.LiquidContainerRegistry;
-import net.minecraftforge.liquids.LiquidStack;
-import net.minecraftforge.liquids.LiquidTank;
+import net.minecraftforge.fluids.FluidRegistry;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.FluidTank;
+import net.minecraftforge.fluids.FluidTankInfo;
+import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.oredict.OreDictionary;
 
-public class TileEntityRubberSmelter extends TileEntity implements IInventory, ITankContainer {
+public class TileEntityRubberSmelter extends TileEntity implements IInventory, IFluidTank {
 
 	private ItemStack[] inv;
-	private LiquidTank rubberTank;
+	private FluidTank rubberTank;
 
 	public int currentCookTime;
 	public final int TOTAL_COOK_TIME = 400;
 	public int currentFuelLevel;
 	public int startFuelLevel;
 
-	private final int MAX_LIQUID = LiquidContainerRegistry.BUCKET_VOLUME * 10;
+	private final int MAX_LIQUID = 1000 * 10;
 
 	public TileEntityRubberSmelter() {
 		inv = new ItemStack[2];
-		rubberTank = new LiquidTank(MAX_LIQUID);
+		rubberTank = new FluidTank(MAX_LIQUID);
 	}
 
 	public int getScaledLiquid(int i) {
-		return rubberTank.getLiquid() != null ? (int) (((float) rubberTank.getLiquid().amount / (float) (MAX_LIQUID)) * i) : 0;
+		return rubberTank.getFluid() != null ? (int) (((float) rubberTank.getFluidAmount() / (float) (MAX_LIQUID)) * i)
+				: 0;
 	}
 
 	public int getScaledCookTime(int i) {
@@ -46,20 +47,16 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 		return (int) ((float) currentFuelLevel / (float) startFuelLevel * i);
 	}
 
-	public LiquidStack getLiquidStack() {
-		return rubberTank.getLiquid();
-	}
-
-	public void updateLiquidId(int val) {
-		if (rubberTank.getLiquid() != null)
-			rubberTank.setLiquid(new LiquidStack(val, rubberTank.getLiquid().amount));
+	public void updateFluidId(int val) {
+		if (rubberTank.getFluid() != null)
+			rubberTank.setFluid(new FluidStack(val, rubberTank.getFluidAmount()));
 		else
-			rubberTank.setLiquid(new LiquidStack(val, 0));
+			rubberTank.setFluid(new FluidStack(val, 0));
 	}
 
-	public void updateLiquidAmount(int val) {
-		if (rubberTank.getLiquid() != null)
-			rubberTank.setLiquid(new LiquidStack(rubberTank.getLiquid().itemID, val));
+	public void updateFluidAmount(int val) {
+		if (rubberTank.getFluid() != null)
+			rubberTank.setFluid(new FluidStack(rubberTank.getFluid(), val));
 	}
 
 	@Override
@@ -86,7 +83,8 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 		if (stack != null) {
 			if (stack.stackSize <= amt) {
 				setInventorySlotContents(slot, null);
-			} else {
+			}
+			else {
 				stack = stack.splitStack(amt);
 				if (stack.stackSize == 0) {
 					setInventorySlotContents(slot, null);
@@ -137,15 +135,8 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 			}
 		}
 
-		if (tagCompound.hasKey("stored") && tagCompound.hasKey("liquidId")) {
-			LiquidStack liquid = new LiquidStack(tagCompound.getInteger("liquidId"), tagCompound.getInteger("stored"), 0);
-			rubberTank.setLiquid(liquid);
-		} else {
-			LiquidStack liquid = LiquidStack.loadLiquidStackFromNBT(tagCompound.getCompoundTag("rubberTank"));
-			if (liquid != null) {
-				rubberTank.setLiquid(liquid);
-			}
-		}
+		if (tagCompound.hasKey("rubberTank"))
+			rubberTank.setFluid(FluidStack.loadFluidStackFromNBT(tagCompound.getCompoundTag("rubberTank")));
 
 		currentCookTime = tagCompound.getInteger("cookTime");
 		currentFuelLevel = tagCompound.getInteger("fuelLevel");
@@ -168,8 +159,10 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 		}
 		tagCompound.setTag("Inventory", itemList);
 
-		if (rubberTank.containsValidLiquid()) {
-			tagCompound.setTag("rubberTank", rubberTank.getLiquid().writeToNBT(new NBTTagCompound()));
+		if (rubberTank.getFluid() != null) {
+			NBTTagCompound rubberTag = new NBTTagCompound();
+			rubberTank.getFluid().writeToNBT(rubberTag);
+			tagCompound.setCompoundTag("rubberTank", rubberTag);
 		}
 
 		tagCompound.setInteger("cookTime", currentCookTime);
@@ -188,30 +181,24 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 	}
 
 	@Override
-	public boolean isStackValidForSlot(int i, ItemStack itemstack) {
-		if (i == 0)
-			return OreDictionary.itemMatches(itemstack, Ic2Items.rubber, true)
-					|| OreDictionary.itemMatches(itemstack, Ic2Items.rubberWood, true);
-		if (i == 1)
-			return TileEntityFurnace.isItemFuel(itemstack);
-		return false;
-	}
-
-	@Override
 	public void updateEntity() {
 
 		int prod = getRubberProduction(inv[0]);
-		if (prod > 0 && (rubberTank.getLiquid() == null || rubberTank.getLiquid().amount + prod <= rubberTank.getCapacity())) {
+		if (prod > 0
+				&& (rubberTank.getFluid() == null || rubberTank.getFluidAmount() + prod <= rubberTank.getCapacity())) {
 			if (currentCookTime >= TOTAL_COOK_TIME) {
 				currentCookTime = 0;
 				decrStackSize(0, 1);
-				rubberTank.fill(new LiquidStack(UniversalWire.rubberStill, prod), true);
-			} else if (currentFuelLevel > 0 || refuel()) {
+				rubberTank.fill(new FluidStack(UniversalWire.fluidRubber, prod), true);
+			}
+			else if (currentFuelLevel > 0 || refuel()) {
 				currentCookTime += 1;
 				currentFuelLevel -= 1;
-			} else
+			}
+			else
 				currentCookTime = 0;
-		} else
+		}
+		else
 			currentCookTime = 0;
 	}
 
@@ -237,40 +224,44 @@ public class TileEntityRubberSmelter extends TileEntity implements IInventory, I
 	}
 
 	@Override
-	public int fill(ForgeDirection from, LiquidStack resource, boolean doFill) {
-		if (resource.isLiquidEqual(rubberTank.getLiquid()))
+	public FluidStack getFluid() {
+		return rubberTank.getFluid();
+	}
+
+	@Override
+	public int getFluidAmount() {
+		return rubberTank.getFluidAmount();
+	}
+
+	@Override
+	public int getCapacity() {
+		return rubberTank.getCapacity();
+	}
+
+	@Override
+	public FluidTankInfo getInfo() {
+		return rubberTank.getInfo();
+	}
+
+	@Override
+	public int fill(FluidStack resource, boolean doFill) {
+		if (resource.isFluidEqual(rubberTank.getFluid()))
 			return rubberTank.fill(resource, doFill);
 		return 0;
 	}
 
 	@Override
-	public int fill(int tankIndex, LiquidStack resource, boolean doFill) {
-		if (tankIndex == 0 && resource.isLiquidEqual(rubberTank.getLiquid()))
-			return rubberTank.fill(resource, doFill);
-		return 0;
-	}
-
-	@Override
-	public LiquidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
+	public FluidStack drain(int maxDrain, boolean doDrain) {
 		return rubberTank.drain(maxDrain, doDrain);
 	}
 
 	@Override
-	public LiquidStack drain(int tankIndex, int maxDrain, boolean doDrain) {
-		if (tankIndex == 0)
-			return rubberTank.drain(maxDrain, doDrain);
-		return null;
-	}
-
-	@Override
-	public ILiquidTank[] getTanks(ForgeDirection direction) {
-		return new LiquidTank[] { rubberTank };
-	}
-
-	@Override
-	public ILiquidTank getTank(ForgeDirection direction, LiquidStack type) {
-		if (type == null || type.isLiquidEqual(UniversalWire.rubberLiquid))
-			return rubberTank;
-		return null;
+	public boolean isItemValidForSlot(int i, ItemStack itemstack) {
+		if (i == 0)
+			return OreDictionary.itemMatches(itemstack, Ic2Items.rubber, true)
+					|| OreDictionary.itemMatches(itemstack, Ic2Items.rubberWood, true);
+		if (i == 1)
+			return TileEntityFurnace.isItemFuel(itemstack);
+		return false;
 	}
 }

@@ -5,11 +5,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import samoht2401.universalwire.network.ISerializable;
+
 import net.minecraft.nbt.NBTTagCompound;
 
-import buildcraft.core.network.IClientState;
-
-public class BufferManager implements IClientState {
+public class BufferManager implements ISerializable {
 
 	private ArrayList<IEnergyBuffer> buffers;
 	private int energyBuffer;

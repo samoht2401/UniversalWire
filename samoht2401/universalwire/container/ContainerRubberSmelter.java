@@ -14,20 +14,22 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntityFurnace;
 import net.minecraftforge.common.ForgeDirection;
-import net.minecraftforge.liquids.LiquidStack;
+import net.minecraftforge.fluids.FluidStack;
 
 public class ContainerRubberSmelter extends Container {
 
 	protected TileEntityRubberSmelter tileEntity;
 
-	public ContainerRubberSmelter(InventoryPlayer inventoryPlayer, TileEntityRubberSmelter te) {
+	public ContainerRubberSmelter(InventoryPlayer inventoryPlayer,
+			TileEntityRubberSmelter te) {
 		super();
 		tileEntity = te;
 
 		// the Slot constructor takes the IInventory and the slot number in that
 		// it binds to
 		// and the x-y coordinates it resides on-screen
-		addSlotToContainer(new SlotTyped(tileEntity, 0, 56, 17).addToValidId(Ic2Items.rubber).addToValidId(Ic2Items.rubberWood));
+		addSlotToContainer(new SlotTyped(tileEntity, 0, 56, 17).addToValidId(
+				Ic2Items.rubber).addToValidId(Ic2Items.rubberWood));
 		addSlotToContainer(new SlotBurningFuel(tileEntity, 1, 56, 53));
 
 		// commonly used vanilla code that adds the player's inventory
@@ -38,16 +40,18 @@ public class ContainerRubberSmelter extends Container {
 	public void detectAndSendChanges() {
 		super.detectAndSendChanges();
 
-		LiquidStack l = tileEntity.getLiquidStack();
+		FluidStack l = tileEntity.getFluid();
 		if (l == null)
 			return;
 		for (int i = 0; i < this.crafters.size(); ++i) {
 			ICrafting icrafting = (ICrafting) this.crafters.get(i);
 
-			icrafting.sendProgressBarUpdate(this, 0, l.itemID);
+			icrafting.sendProgressBarUpdate(this, 0, l.fluidID);
 			icrafting.sendProgressBarUpdate(this, 1, l.amount);
-			icrafting.sendProgressBarUpdate(this, 2, tileEntity.currentCookTime);
-			icrafting.sendProgressBarUpdate(this, 3, tileEntity.currentFuelLevel);
+			icrafting
+					.sendProgressBarUpdate(this, 2, tileEntity.currentCookTime);
+			icrafting.sendProgressBarUpdate(this, 3,
+					tileEntity.currentFuelLevel);
 			icrafting.sendProgressBarUpdate(this, 4, tileEntity.startFuelLevel);
 		}
 	}
@@ -56,14 +60,14 @@ public class ContainerRubberSmelter extends Container {
 	@Override
 	public void updateProgressBar(int i, int val) {
 
-		LiquidStack l = tileEntity.getLiquidStack();
+		FluidStack l = tileEntity.getFluid();
 		switch (i) {
 		case 0: {
-			tileEntity.updateLiquidId(val);
+			tileEntity.updateFluidId(val);
 			break;
 		}
 		case 1: {
-			tileEntity.updateLiquidAmount(val);
+			tileEntity.updateFluidAmount(val);
 			break;
 		}
 		case 2: {
@@ -89,7 +93,8 @@ public class ContainerRubberSmelter extends Container {
 	protected void bindPlayerInventory(InventoryPlayer inventoryPlayer) {
 		for (int i = 0; i < 3; i++) {
 			for (int j = 0; j < 9; j++) {
-				addSlotToContainer(new Slot(inventoryPlayer, j + i * 9 + 9, 8 + j * 18, 84 + i * 18));
+				addSlotToContainer(new Slot(inventoryPlayer, j + i * 9 + 9,
+						8 + j * 18, 84 + i * 18));
 			}
 		}
 

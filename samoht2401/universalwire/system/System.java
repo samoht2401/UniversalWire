@@ -11,13 +11,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import buildcraft.api.power.IPowerEmitter;
 import buildcraft.api.power.IPowerReceptor;
+import buildcraft.api.power.PowerHandler;
+import buildcraft.api.power.PowerHandler.PowerReceiver;
 
 import cpw.mods.fml.client.FMLClientHandler;
 
 import samoht2401.universalwire.CommonProxy;
 import samoht2401.universalwire.UniversalWire;
-import samoht2401.universalwire.network.PacketSystem;
+import samoht2401.universalwire.network.PacketIDs;
+import samoht2401.universalwire.network.PacketSerializableInfo;
 import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.tileentity.TileEntityCable;
 import samoht2401.universalwire.util.Coordinate;
@@ -34,6 +38,7 @@ import net.minecraftforge.common.ForgeDirection;
 public class System {
 
 	public class EqualableChunk {
+
 		public Chunk instance;
 
 		public EqualableChunk(Chunk c) {
@@ -104,7 +109,6 @@ public class System {
 		return bound;
 	}
 
-	
 	public void addItem(Coordinate coord, TileEntity type) {
 		items.put(coord, type);
 		addChunkToBound(new EqualableChunk(world.getChunkFromBlockCoords((int) coord.x, (int) coord.z)));
@@ -239,7 +243,7 @@ public class System {
 		int neededEnergy = 0;
 		int oldBuffer = buffer.getBuffer();
 		HashMap<IEnergySink, Integer> demandsEu = new HashMap<IEnergySink, Integer>();
-		HashMap<IPowerReceptor, Integer> demandsMj = new HashMap<IPowerReceptor, Integer>();
+		HashMap<PowerReceiver, Integer> demandsMj = new HashMap<PowerReceiver, Integer>();
 		for (IEnergySink sink : euSinks) {
 			int demand = sink.demandsEnergy();
 			if (demand > sink.getMaxSafeInput())
@@ -251,38 +255,45 @@ public class System {
 			}
 		}
 		for (IPowerReceptor sink : mjSinks) {
-			int demand = sink.powerRequest(ForgeDirection.DOWN);
-			if (demand > sink.getPowerProvider().getMaxEnergyReceived())
-				demand = sink.getPowerProvider().getMaxEnergyReceived();
-			if (demand + sink.getPowerProvider().getEnergyStored() > sink.getPowerProvider().getMaxEnergyStored())
-				demand = (int) (sink.getPowerProvider().getMaxEnergyStored() - sink.getPowerProvider().getEnergyStored());
+			if(sink instanceof IPowerEmitter)
+				continue;
+			PowerReceiver rec = sink.getPowerReceiver(ForgeDirection.DOWN);
+			int demand = (int) rec.powerRequest();
+			if (demand > rec.getMaxEnergyReceived())
+				demand = (int) rec.getMaxEnergyReceived();
+			if (demand + rec.getEnergyStored() > rec.getMaxEnergyStored())
+				demand = (int) (rec.getMaxEnergyStored() - rec.getEnergyStored());
 			demand *= RATIO_MJ_ENERGY;
 			if (demand > 0) {
 				neededEnergy += demand;
-				demandsMj.put(sink, demand);
+				demandsMj.put(rec, demand);
 			}
 		}
 		if (buffer.getBuffer() >= neededEnergy) {
 			for (IEnergySink sink : demandsEu.keySet())
 				sink.injectEnergy(Direction.YP, buffer.pullFromBuffer(demandsEu.get(sink)) / RATIO_EU_ENERGY);
-			for (IPowerReceptor sink : demandsMj.keySet())
-				sink.getPowerProvider().receiveEnergy(buffer.pullFromBuffer(demandsMj.get(sink)) / RATIO_EU_ENERGY, ForgeDirection.DOWN);
-		} else {
+			for (PowerReceiver sink : demandsMj.keySet())
+				sink.receiveEnergy(PowerHandler.Type.STORAGE, buffer.pullFromBuffer(demandsMj.get(sink))
+						/ RATIO_EU_ENERGY, ForgeDirection.DOWN);
+		}
+		else {
 			double ratio = neededEnergy / (buffer.getBuffer() * 1D);
 			if (ratio < 1)
 				return;
 			for (IEnergySink sink : demandsEu.keySet())
-				sink.injectEnergy(Direction.YP, buffer.pullFromBuffer((int) Math.floor(demandsEu.get(sink) / ratio / RATIO_EU_ENERGY)));
-			for (IPowerReceptor sink : demandsMj.keySet())
-				sink.getPowerProvider().receiveEnergy(
-						buffer.pullFromBuffer((int) Math.floor(demandsMj.get(sink) / ratio / RATIO_EU_ENERGY)), ForgeDirection.DOWN);
+				sink.injectEnergy(Direction.YP,
+						buffer.pullFromBuffer((int) Math.floor(demandsEu.get(sink) / ratio / RATIO_EU_ENERGY)));
+			for (PowerReceiver sink : demandsMj.keySet())
+				sink.receiveEnergy(PowerHandler.Type.STORAGE,
+						buffer.pullFromBuffer((int) Math.floor(demandsMj.get(sink) / ratio / RATIO_MJ_ENERGY)),
+						ForgeDirection.DOWN);
 		}
 		if (oldBuffer != buffer.getBuffer())
 			sendUpdate();
 	}
 
 	private void sendUpdate() {
-		PacketSystem p = new PacketSystem(renderInfo);
+		PacketSerializableInfo p = new PacketSerializableInfo(PacketIDs.SYSTEM_UPDATE, renderInfo);
 		UniversalWire.proxy.sendToPlayers(p.getPacket(), world, 0, 0, 0, Integer.MAX_VALUE);
 	}
 
@@ -293,7 +304,7 @@ public class System {
 	}
 
 	public void playerJoin(EntityPlayer player) {
-		PacketSystem p = new PacketSystem(renderInfo);
+		PacketSerializableInfo p = new PacketSerializableInfo(PacketIDs.SYSTEM_UPDATE, renderInfo);
 		UniversalWire.proxy.sendToPlayer(player, p.getPacket());
 	}
 }

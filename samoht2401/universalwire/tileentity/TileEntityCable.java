@@ -2,7 +2,14 @@ package samoht2401.universalwire.tileentity;
 
 import java.util.ArrayList;
 
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
+
 import samoht2401.universalwire.UniversalWire;
+import samoht2401.universalwire.network.ISerializable;
+import samoht2401.universalwire.network.ISynchronisable;
+import samoht2401.universalwire.network.PacketIDs;
+import samoht2401.universalwire.network.PacketSerializableInfo;
 import samoht2401.universalwire.render.RenderInfoCable;
 import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.system.BufferManager;
@@ -10,12 +17,12 @@ import samoht2401.universalwire.system.IEnergyBuffer;
 import samoht2401.universalwire.system.ItemType;
 import samoht2401.universalwire.system.System;
 
-import buildcraft.api.power.IPowerProvider;
+import buildcraft.BuildCraftCore;
+import buildcraft.api.core.BuildCraftAPI;
 import buildcraft.api.power.IPowerReceptor;
-import buildcraft.api.power.PowerFramework;
-import buildcraft.core.network.IClientState;
-import buildcraft.core.network.ISyncedTile;
-import buildcraft.core.network.PacketTileState;
+import buildcraft.api.power.PowerHandler;
+import buildcraft.api.power.PowerHandler.PowerReceiver;
+import buildcraft.api.power.PowerHandler.Type;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
@@ -24,7 +31,7 @@ import net.minecraft.util.Icon;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
-public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyBuffer, IPowerReceptor {
+public class TileEntityCable extends TileEntity implements ISynchronisable, IEnergyBuffer, IPowerReceptor {
 
 	private RenderInfoCable renderInfo;
 	private RenderInfoSystem renderInfoSystem;
@@ -32,6 +39,7 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 	private boolean hasBeenAddedToSystem;
 	private BufferManager buffer;
 	private float oldColorRatio;
+	private boolean firstUpdate;
 
 	public TileEntityCable() {
 		super();
@@ -40,16 +48,21 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 		currentTexIndex = 0;
 		hasBeenAddedToSystem = false;
 		oldColorRatio = 0f;
-		provider = PowerFramework.currentFramework.createPowerProvider();
-		provider.configure(0, 1, 500, 1, 500);
+		firstUpdate = true;
+		powerHandler = new PowerHandler(this, Type.PIPE);
+		powerHandler.configure(0, 1000, 1, 1000);
+		receiver = powerHandler.getPowerReceiver();
 	}
 
 	public void setCurrentTexture(int index) {
 		currentTexIndex = index;
 	}
 
+	@SideOnly(Side.CLIENT)
 	public Icon getCurrentTexture() {
-		return renderInfo.textures[currentTexIndex];
+		if (renderInfo.textures != null)
+			return renderInfo.textures[currentTexIndex];
+		return null;
 	}
 
 	public void updatePowerDispo(World w, int x, int y, int z, ForgeDirection dir) {
@@ -91,6 +104,9 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 		if (worldObj instanceof WorldClient)
 			return;
 		UniversalWire.systemManager.addItem(worldObj, xCoord, yCoord, zCoord, this);
+		renderInfo.x = xCoord;
+		renderInfo.y = yCoord;
+		renderInfo.z = zCoord;
 		checkConnections();
 	}
 
@@ -103,6 +119,11 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 
 	@Override
 	public void updateEntity() {
+		if (firstUpdate) {
+			renderInfo.x = xCoord;
+			renderInfo.y = yCoord;
+			renderInfo.z = zCoord;
+		}
 		if (renderInfoSystem != null)
 			if (UniversalWire.systemManager.setRenderInfoSystem(this, renderInfoSystem))
 				renderInfoSystem = null;
@@ -116,7 +137,7 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 			UniversalWire.systemManager.addItem(worldObj, xCoord, yCoord, zCoord, this);
 			hasBeenAddedToSystem = true;
 		}
-		provider.update(this);
+		// provider.update(this);
 	}
 
 	public void checkConnections() {
@@ -141,8 +162,8 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 
 	@Override
 	public Packet getDescriptionPacket() {
-		PacketTileState packet = new PacketTileState(this.xCoord, this.yCoord, this.zCoord);
-		packet.addStateForSerialization((byte) 0, renderInfo);
+		PacketSerializableInfo packet = new PacketSerializableInfo(PacketIDs.CABLE_UPDATE);
+		packet.info = renderInfo;
 		return packet.getPacket();
 	}
 
@@ -155,7 +176,7 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 		for (int i = 0; i < connect.length; i++)
 			connect[i] = renderInfo.connections.get(i).ordinal();
 		comp.setIntArray("Connections", connect);
-		provider.writeToNBT(comp);
+		// provider.writeToNBT(comp);
 
 		RenderInfoSystem ris = RenderInfoSystem.get(UniversalWire.systemManager.getSystemId(this));
 		if (ris != null) {
@@ -163,7 +184,8 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 			ris.writeToNBT(tag);
 			comp.setCompoundTag("renderInfoSystem", tag);
 			ris.isAlreadySaved = true;
-		} else if (comp.hasKey("renderInfoSystem"))
+		}
+		else if (comp.hasKey("renderInfoSystem"))
 			comp.removeTag("renderInfoSystem");
 	}
 
@@ -175,7 +197,7 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 		int[] connect = comp.getIntArray("Connections");
 		for (int i = 0; i < connect.length; i++)
 			renderInfo.connections.add(ForgeDirection.getOrientation(connect[i]));
-		provider.readFromNBT(comp);
+		// provider.readFromNBT(comp);
 
 		if (comp.hasKey("renderInfoSystem")) {
 			NBTTagCompound tag = comp.getCompoundTag("renderInfoSystem");
@@ -185,17 +207,12 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 	}
 
 	@Override
-	public IClientState getStateInstance(byte stateId) {
-		switch (stateId) {
-		case 0:
-			return renderInfo;
+	public void updateSynchronisedInfo(ISerializable info) {
+		if (info instanceof RenderInfoCable) {
+			((RenderInfoCable) info).textures = renderInfo.textures;
+			renderInfo = (RenderInfoCable) info;
+			updateRender();
 		}
-		throw new RuntimeException("Unknown state requested: " + stateId + " this is a bug!");
-	}
-
-	@Override
-	public void afterStateUpdated(byte stateId) {
-		updateRender();
 	}
 
 	@Override
@@ -212,28 +229,23 @@ public class TileEntityCable extends TileEntity implements ISyncedTile, IEnergyB
 	}
 
 	// Just to be able to get power from buildcraft
-	IPowerProvider provider;
+	PowerReceiver receiver;
+	PowerHandler powerHandler;
 
 	@Override
-	public void setPowerProvider(IPowerProvider provider) {
-		this.provider = provider;
-		provider.configure(0, 1, 500, 1, 500);
+	public void doWork(PowerHandler handler) {
+		int surplus = UniversalWire.systemManager.sourceEvent(worldObj, this, (int) handler.getEnergyStored());
+		int conso = (int) handler.getEnergyStored() - surplus;
+		handler.useEnergy(conso, conso, true);
 	}
 
 	@Override
-	public IPowerProvider getPowerProvider() {
-		return provider;
+	public PowerReceiver getPowerReceiver(ForgeDirection arg0) {
+		return receiver;
 	}
 
 	@Override
-	public void doWork() {
-		int surplus = UniversalWire.systemManager.sourceEvent(worldObj, this, (int) provider.getEnergyStored());
-		int conso = (int) provider.getEnergyStored() - surplus;
-		provider.useEnergy(conso, conso, true);
-	}
-
-	@Override
-	public int powerRequest(ForgeDirection from) {
-		return 500;
+	public World getWorld() {
+		return worldObj;
 	}
 }

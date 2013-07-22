@@ -8,67 +8,55 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockStationary;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
-import net.minecraftforge.liquids.ILiquid;
+import net.minecraftforge.fluids.BlockFluidFinite;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.IFluidBlock;
 
-public class BlockRubberStill extends BlockStationary implements ILiquid {
+public class BlockRubberStill extends BlockFluidFinite {
 
 	public BlockRubberStill(int i, Material material) {
-		super(i, material);
+		super(i, UniversalWire.fluidRubber, material);
 
-		setHardness(100F);
-		setLightOpacity(3);
+		// setHardness(100F);
+		// setLightOpacity(3);
+		setCreativeTab(CreativeTabs.tabBlock);
 	}
 
-	@Override
-	public int getRenderType() {
-		return Block.waterStill.getRenderType();
-	}
-
-	@Override
-	public int stillLiquidId() {
-		return UniversalWire.rubberStill.blockID;
-	}
-
-	@Override
-	public boolean isMetaSensitive() {
-		return false;
-	}
-
-	@Override
-	public int stillLiquidMeta() {
-		return 0;
-	}
-
-	@Override
-	public boolean isBlockReplaceable(World world, int i, int j, int k) {
-		return true;
-	}
+	/*
+	 * @Override public int getRenderType() { return
+	 * Block.waterStill.getRenderType(); }
+	 * 
+	 * @Override public boolean isBlockReplaceable(World world, int i, int j,
+	 * int k) { return true; }
+	 */
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void registerIcons(IconRegister iconRegister) {
-		this.theIcon = new Icon[] { iconRegister.registerIcon("UniversalWire:rubber"),
-				iconRegister.registerIcon("UniversalWire:rubber_flow") };
+		UniversalWire.fluidRubber.registerIcons(iconRegister);
 	}
 
 	@Override
 	public Icon getIcon(int side, int metadata) {
-		return theIcon[0];
+		if (side == 1)
+			return UniversalWire.fluidRubber.getStillIcon();
+		else
+			return UniversalWire.fluidRubber.getFlowingIcon();
 	}
 
-	@Override
-	public int getFireSpreadSpeed(World world, int x, int y, int z, int metadata, ForgeDirection face) {
-		return 0;
-	}
-
-	@Override
-	public int getFlammability(IBlockAccess world, int x, int y, int z, int metadata, ForgeDirection face) {
-		return 0;
-	}
+	/*
+	 * @Override public int getFireSpreadSpeed(World world, int x, int y, int z,
+	 * int metadata, ForgeDirection face) { return 0; }
+	 * 
+	 * @Override public int getFlammability(IBlockAccess world, int x, int y,
+	 * int z, int metadata, ForgeDirection face) { return 0; }
+	 */
 
 	@Override
 	public boolean isFlammable(IBlockAccess world, int x, int y, int z, int metadata, ForgeDirection face) {
@@ -77,6 +65,13 @@ public class BlockRubberStill extends BlockStationary implements ILiquid {
 
 	@Override
 	public boolean isFireSource(World world, int x, int y, int z, int metadata, ForgeDirection side) {
-		return false;
+		return true;
+	}
+	
+	@Override
+	@SideOnly(Side.CLIENT)
+	public int colorMultiplier(IBlockAccess world, int x, int y, int z)
+	{
+		return 0;
 	}
 }
