@@ -13,6 +13,7 @@ import samoht2401.universalwire.render.RenderInfoTank;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
@@ -31,6 +32,22 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 
 	public TileEntityTank() {
 		tank = new FluidTank(BlockTank.TANK_CAPACITY);
+	}
+
+	@Override
+	public void writeToNBT(NBTTagCompound tag) {
+		super.writeToNBT(tag);
+		NBTTagCompound tankTag = new NBTTagCompound();
+		tank.writeToNBT(tankTag);
+		tag.setCompoundTag("tank", tankTag);
+	}
+
+	@Override
+	public void readFromNBT(NBTTagCompound tag) {
+		super.readFromNBT(tag);
+		if (tag.hasKey("tank")) {
+			tank.readFromNBT(tag.getCompoundTag("tank"));
+		}
 	}
 
 	@Override
