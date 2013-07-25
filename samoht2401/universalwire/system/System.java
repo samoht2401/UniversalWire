@@ -258,6 +258,8 @@ public class System {
 			if(sink instanceof IPowerEmitter)
 				continue;
 			PowerReceiver rec = sink.getPowerReceiver(ForgeDirection.DOWN);
+			if(rec == null)
+				continue;
 			int demand = (int) rec.powerRequest();
 			if (demand > rec.getMaxEnergyReceived())
 				demand = (int) rec.getMaxEnergyReceived();
