@@ -540,19 +540,79 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			hasGlassYPos = true;
 		}
 
+		// Liquid
 		TileEntity te = world.getBlockTileEntity(x, y, z);
 		if (te instanceof TileEntityTank) {
 			TileEntityTank tile = (TileEntityTank) te;
-			if (tile.getFluid() != null && tile.getFluid().amount > 0) {
+
+			int o = 0;
+			if (x == -499 && y == 5 && z == -558)
+				o = 1;
+
+			if (tile.getFluid() != null) {
+				float level = (float) (tile.getFluid().amount) / (float) (BlockTank.TANK_CAPACITY);
+				int ldXNeg = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.WEST.ordinal() - 2] : 0;
+				int ldXPos = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.EAST.ordinal() - 2] : 0;
+				int ldZNeg = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.NORTH.ordinal() - 2] : 0;
+				int ldZPos = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.SOUTH.ordinal() - 2] : 0;
+				int ltXNeg = tile.liquidCommingTop[ForgeDirection.WEST.ordinal() - 2];
+				int ltXPos = tile.liquidCommingTop[ForgeDirection.EAST.ordinal() - 2];
+				int ltZNeg = tile.liquidCommingTop[ForgeDirection.NORTH.ordinal() - 2];
+				int ltZPos = tile.liquidCommingTop[ForgeDirection.SOUTH.ordinal() - 2];
+				TileEntityTank below = TileEntityTank.getTankBelow(tile);
+				boolean drawFluidLevel = below == null || below.isFull();
+				boolean liquidFromTop = false;
+
 				xMin = hasGlassXNeg ? boardOffset : 0f;
 				xMax = hasGlassXPos ? 1 - boardOffset : 1f;
 				yMin = hasGlassYNeg ? boardOffset : 0f;
 				yMax = hasGlassYPos ? 1 - boardOffset : 1f;
 				zMin = hasGlassZNeg ? boardOffset : 0f;
 				zMax = hasGlassZPos ? 1 - boardOffset : 1f;
-				renderLiquidLevel(renderer, world, block, tile.getFluid().getFluid(), x, y, z,
-						(float) (tile.getFluid().amount) / (float) (BlockTank.TANK_CAPACITY), xMin, yMin, zMin, xMax,
-						yMax, zMax);
+
+				if (ltXNeg > 0) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f,
+							boardOffset, yMin, zMin, boardOffset + ltXNeg * 0.001f, 1f, zMax, true);
+					liquidFromTop = true;
+				}
+				if (ltXPos > 0) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, 1
+							- boardOffset - ltXPos * 0.001f, yMin, zMin, 1 - boardOffset, 1f, zMax, true);
+					liquidFromTop = true;
+				}
+				if (ltZNeg > 0) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
+							yMin, boardOffset, xMax, 1f, boardOffset + ltZNeg * 0.001f, true);
+					liquidFromTop = true;
+				}
+				if (ltZPos > 0) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
+							yMin, 1 - boardOffset - ltZPos * 0.001f, xMax, 1f, 1 - boardOffset, true);
+					liquidFromTop = true;
+				}
+				float toAdd = 1f / 16f;
+				if (ldXNeg > 0 && !liquidFromTop) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
+							yMin, zMin, xMin + ldXNeg * (14f / 16000f) + toAdd, yMax, zMax, true);
+				}
+				if (ldXPos > 0 && !liquidFromTop) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMax
+							- ldXPos * (14f / 16000f) - toAdd, yMin, zMin, xMax, yMax, zMax, true);
+				}
+				if (ldZNeg > 0 && !liquidFromTop) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
+							yMin, zMin, xMax, yMax, zMin + ldZNeg * (14f / 16000f) + toAdd, true);
+				}
+				if (ldZPos > 0 && !liquidFromTop) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
+							yMin, zMax - ldZPos * (14f / 16000f) - toAdd, xMax, yMax, zMax, true);
+				}
+
+				te = world.getBlockTileEntity(x, y - 1, z);
+				if (drawFluidLevel && level > 0) {
+					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
+							yMin, zMin, xMax, yMax, zMax, false);
+				}
 			}
 		}
 
@@ -741,13 +801,13 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		renderblocks.renderStandardBlock(block, xCoord, yCoord, zCoord);
 	}
 
-	private void renderLiquidLevel(RenderBlocks renderer, IBlockAccess world, Block block, Fluid fluid, int x, int y,
-			int z, float level, float xMin, float yMin, float zMin, float xMax, float yMax, float zMax) {
+	private void renderLiquidLevel(RenderBlocks renderer, IBlockAccess world, Block block, TileEntityTank tile,
+			Fluid fluid, int x, int y, int z, float level, float xMin, float yMin, float zMin, float xMax, float yMax,
+			float zMax, boolean isFlow) {
 
 		float yMaxToAdd = 1f / 16f;
-		TileEntity te = world.getBlockTileEntity(x, y + 1, z);
-		if ((te != null && te instanceof TileEntityTank && ((TileEntityTank) te).getFluid() != null && ((TileEntityTank) te)
-				.getFluid().amount != 0))
+		TileEntityTank above = TileEntityTank.getTankAbove(tile);
+		if (yMax == 1f && level > 0.99f && ((above != null && above.getFluid() != null && above.getFluid().amount != 0) || isFlow))
 			yMaxToAdd += 1f / 16f;
 		block.setBlockBounds(xMin, yMin, zMin, xMax, (14f / 16f) * level + yMaxToAdd, zMax);
 		renderer.setRenderBoundsFromBlock(block);
@@ -764,6 +824,8 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		float f4 = 0, f5 = 0;
 		Tessellator tessellator = Tessellator.instance;
 		Icon icon = fluid.getStillIcon();
+		if (isFlow)
+			icon = fluid.getFlowingIcon();
 
 		if (xMin != 0f) {
 			if (doLight) {

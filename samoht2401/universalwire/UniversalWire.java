@@ -49,7 +49,7 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.0"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
+@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.1"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class UniversalWire implements ITickHandler {
 
