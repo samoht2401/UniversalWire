@@ -19,6 +19,7 @@ import buildcraft.api.power.IPowerReceptor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.src.ModLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -136,7 +137,7 @@ public class SystemManager {
 	public void addItem(World w, Coordinate coord, TileEntity tileEntity) {
 		if (w instanceof WorldClient)
 			return;
-		if (tileEntity instanceof TileEntityElectricBlock || tileEntity instanceof TileEntityTransformer)
+		if (ModLoader.isModLoaded("IC2") && (tileEntity instanceof TileEntityElectricBlock || tileEntity instanceof TileEntityTransformer))
 			return;
 		if (isAnyContaining(w, coord))
 			return;

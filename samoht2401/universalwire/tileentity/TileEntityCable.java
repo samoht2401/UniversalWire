@@ -17,7 +17,6 @@ import samoht2401.universalwire.system.IEnergyBuffer;
 import samoht2401.universalwire.system.ItemType;
 import samoht2401.universalwire.system.System;
 
-import buildcraft.BuildCraftCore;
 import buildcraft.api.core.BuildCraftAPI;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
