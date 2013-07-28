@@ -71,7 +71,7 @@ public class UniversalWire implements ITickHandler {
 	public static int rubberModel;
 
 	// Says where the client and server 'proxy' code is loaded.
-	@SidedProxy(clientSide = "samoht2401.universalwire.client.ClientProxy", serverSide = "samoht2401.univeralwire.CommonProxy")
+	@SidedProxy(clientSide = "samoht2401.universalwire.client.ClientProxy", serverSide = "samoht2401.universalwire.CommonProxy")
 	public static CommonProxy proxy;
 
 	@EventHandler
@@ -100,7 +100,7 @@ public class UniversalWire implements ITickHandler {
 		LanguageRegistry.addName(blockCable, "Cable");
 		LanguageRegistry.addName(blockTank, "Tank");
 
-		GameRegistry.addShapedRecipe(new ItemStack(blockCable, 16), "GDG", "GRG", "GDG", 'G', Block.glass, 'D', Item.diamond, 'R',
+		GameRegistry.addShapedRecipe(new ItemStack(blockCable, 8), "GDG", "GRG", "GDG", 'G', Block.glass, 'D', Item.diamond, 'R',
 				Block.blockRedstone);
 		GameRegistry.addShapedRecipe(new ItemStack(blockTank, 4), "G G", "G G", "GGG", 'G', Block.glass);
 
