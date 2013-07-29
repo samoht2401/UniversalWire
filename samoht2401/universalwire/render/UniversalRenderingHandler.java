@@ -32,6 +32,8 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 	public void renderInventoryBlock(Block block, int metadata, int modelID, RenderBlocks renderer) {
 		if (block instanceof BlockCable)
 			renderCableItem(renderer, new ItemStack(block), -0.5f, -0.5f, -0.5f);
+		if (block instanceof BlockTank)
+			renderTankItem(renderer, new ItemStack(block), -0.5f, -0.5f, -0.5f);
 	}
 
 	private void renderCableItem(RenderBlocks render, ItemStack item, float translateX, float translateY,
@@ -76,6 +78,79 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		block.setBlockBounds(min, liqOffset, min, max, 1.0F - liqOffset, max);
 		render.setRenderBoundsFromBlock(block);
 		tessellatCube(tessellator, block, icon, render, 0D, 0D, 0D);
+
+		GL11.glTranslatef(-translateX, -translateY, -translateZ);
+		block.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+	}
+
+	private void renderTankItem(RenderBlocks renderer, ItemStack item, float translateX, float translateY,
+			float translateZ) {
+
+		Tessellator tessellator = Tessellator.instance;
+
+		Block block = UniversalWire.blockTank;
+
+		GL11.glTranslatef(translateX, translateY, translateZ);
+
+		float min = BlockTank.TANK_MIN;
+		float max = BlockTank.TANK_MAX;
+		float boardOffset = 1f / 16f;
+		float boardLiqOffset = 1f / 16f + 0.001f;
+		Icon texColor = BlockTank.colorIcon;
+		Icon texGlass = BlockTank.glassIcon;
+
+		// Frame
+		Icon icon = texColor;
+		// Bottom
+		block.setBlockBounds(min, 0f, min, min + boardOffset, boardOffset, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(max - boardOffset, 0f, min, max, boardOffset, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(min, 0f, min, max, boardOffset, min + boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(min, 0f, max - boardOffset, max, boardOffset, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		// Top
+		block.setBlockBounds(min, 1f - boardOffset, min, min + boardOffset, 1f, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(max - boardOffset, 1f - boardOffset, min, max, 1f, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(min, 1f - boardOffset, min, max, 1f, min + boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(min, 1f - boardOffset, max - boardOffset, max, 1f, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		// Side
+		block.setBlockBounds(min, 0f, min, min + boardOffset, 1f, min + boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(min, 0f, max - boardOffset, min + boardOffset, 1f, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(max - boardOffset, 0f, min, max, 1f, min + boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(max - boardOffset, 0f, max - boardOffset, max, 1f, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatCube(tessellator, block, icon, renderer, 0D, 0D, 0D);
+
+		icon = texGlass;
+		block.setBlockBounds(min, boardOffset, boardOffset, max, 1 - boardOffset, 1 - boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatXFace(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(boardOffset, boardOffset, min, 1 - boardOffset, 1 - boardOffset, max);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatZFace(tessellator, block, icon, renderer, 0D, 0D, 0D);
+		block.setBlockBounds(boardOffset, min, boardOffset, 1 - boardOffset, max, 1 - boardOffset);
+		renderer.setRenderBoundsFromBlock(block);
+		tessellatYFace(tessellator, block, icon, renderer, 0D, 0D, 0D);
 
 		GL11.glTranslatef(-translateX, -translateY, -translateZ);
 		block.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
@@ -328,6 +403,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		float min = block.TANK_MIN;
 		float max = block.TANK_MAX;
 		float boardOffset = 1f / 16f;
+		float boardLiqOffset = 1f / 16f + 0.001f;
 		Icon texColor = block.colorIcon;
 		Icon texGlass = block.glassIcon;
 
@@ -522,7 +598,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			zMax -= hasFrameYNegZPos ? boardOffset : 0;
 			block.setBlockBounds(xMin, 0f, zMin, xMax, boardOffset, zMax);
 			renderer.setRenderBoundsFromBlock(block);
-			renderer.renderStandardBlock(block, x, y, z);
+			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'x', 'z', false);
 			hasGlassYNeg = true;
 		}
 		if (!yPos) {
@@ -563,49 +639,49 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 				boolean drawFluidLevel = below == null || below.isFull();
 				boolean liquidFromTop = false;
 
-				xMin = hasGlassXNeg ? boardOffset : 0f;
-				xMax = hasGlassXPos ? 1 - boardOffset : 1f;
-				yMin = hasGlassYNeg ? boardOffset : 0f;
-				yMax = hasGlassYPos ? 1 - boardOffset : 1f;
-				zMin = hasGlassZNeg ? boardOffset : 0f;
-				zMax = hasGlassZPos ? 1 - boardOffset : 1f;
+				xMin = hasGlassXNeg ? boardLiqOffset : 0f;
+				xMax = hasGlassXPos ? 1 - boardLiqOffset : 1f;
+				yMin = hasGlassYNeg ? boardLiqOffset : 0f;
+				yMax = hasGlassYPos ? 1 - boardLiqOffset : 1f;
+				zMin = hasGlassZNeg ? boardLiqOffset : 0f;
+				zMax = hasGlassZPos ? 1 - boardLiqOffset : 1f;
 
 				if (ltXNeg > 0) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f,
-							boardOffset, yMin, zMin, boardOffset + ltXNeg * 0.001f, 1f, zMax, true);
+							boardLiqOffset, yMin, zMin, boardLiqOffset + ltXNeg * 0.001f, 1f, zMax, true);
 					liquidFromTop = true;
 				}
 				if (ltXPos > 0) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, 1
-							- boardOffset - ltXPos * 0.001f, yMin, zMin, 1 - boardOffset, 1f, zMax, true);
+							- boardLiqOffset - ltXPos * 0.001f, yMin, zMin, 1 - boardLiqOffset, 1f, zMax, true);
 					liquidFromTop = true;
 				}
 				if (ltZNeg > 0) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
-							yMin, boardOffset, xMax, 1f, boardOffset + ltZNeg * 0.001f, true);
+							yMin, boardLiqOffset, xMax, 1f, boardLiqOffset + ltZNeg * 0.001f, true);
 					liquidFromTop = true;
 				}
 				if (ltZPos > 0) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
-							yMin, 1 - boardOffset - ltZPos * 0.001f, xMax, 1f, 1 - boardOffset, true);
+							yMin, 1 - boardLiqOffset - ltZPos * 0.001f, xMax, 1f, 1 - boardLiqOffset, true);
 					liquidFromTop = true;
 				}
-				float toAdd = 1f / 16f;
+				float toAdd = boardLiqOffset;
 				if (ldXNeg > 0 && !liquidFromTop) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMin, xMin + ldXNeg * (14f / 16000f) + toAdd, yMax, zMax, true);
+							yMin, zMin, xMin + ldXNeg * (14f / 16000f - 0.001f) + toAdd, yMax, zMax, true);
 				}
 				if (ldXPos > 0 && !liquidFromTop) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMax
-							- ldXPos * (14f / 16000f) - toAdd, yMin, zMin, xMax, yMax, zMax, true);
+							- ldXPos * (14f / 16000f - 0.001f) - toAdd, yMin, zMin, xMax, yMax, zMax, true);
 				}
 				if (ldZNeg > 0 && !liquidFromTop) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMin, xMax, yMax, zMin + ldZNeg * (14f / 16000f) + toAdd, true);
+							yMin, zMin, xMax, yMax, zMin + ldZNeg * (14f / 16000f - 0.001f) + toAdd, true);
 				}
 				if (ldZPos > 0 && !liquidFromTop) {
 					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMax - ldZPos * (14f / 16000f) - toAdd, xMax, yMax, zMax, true);
+							yMin, zMax - ldZPos * (14f / 16000f - 0.001f) - toAdd, xMax, yMax, zMax, true);
 				}
 
 				te = world.getBlockTileEntity(x, y - 1, z);
@@ -689,6 +765,42 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		tessellator.draw();
 		tessellator.startDrawingQuads();
 		tessellator.setNormal(-1.0F, 0.0F, 0.0F);
+		renderer.renderFaceXPos(block, x, y, z, icon);
+		tessellator.draw();
+	}
+
+	private void tessellatYFace(Tessellator tessellator, Block block, Icon icon, RenderBlocks renderer, double x,
+			double y, double z) {
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(0.0F, -1F, 0.0F);
+		renderer.renderFaceYNeg(block, x, y, z, icon);
+		tessellator.draw();
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(0.0F, 1.0F, 0.0F);
+		renderer.renderFaceYPos(block, x, y, z, icon);
+		tessellator.draw();
+	}
+
+	private void tessellatZFace(Tessellator tessellator, Block block, Icon icon, RenderBlocks renderer, double x,
+			double y, double z) {
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(0.0F, 0.0F, -1F);
+		renderer.renderFaceZNeg(block, x, y, z, icon);
+		tessellator.draw();
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(0.0F, 0.0F, 1.0F);
+		renderer.renderFaceZPos(block, x, y, z, icon);
+		tessellator.draw();
+	}
+
+	private void tessellatXFace(Tessellator tessellator, Block block, Icon icon, RenderBlocks renderer, double x,
+			double y, double z) {
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(-1F, 0.0F, 0.0F);
+		renderer.renderFaceXNeg(block, x, y, z, icon);
+		tessellator.draw();
+		tessellator.startDrawingQuads();
+		tessellator.setNormal(1.0F, 0.0F, 0.0F);
 		renderer.renderFaceXPos(block, x, y, z, icon);
 		tessellator.draw();
 	}
@@ -805,10 +917,11 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			Fluid fluid, int x, int y, int z, float level, float xMin, float yMin, float zMin, float xMax, float yMax,
 			float zMax, boolean isFlow) {
 
-		float yMaxToAdd = 1f / 16f;
+		float yMaxToAdd = 1f / 16f + 0.001f;
 		TileEntityTank above = TileEntityTank.getTankAbove(tile);
-		if (yMax == 1f && level > 0.99f && ((above != null && above.getFluid() != null && above.getFluid().amount != 0) || isFlow))
-			yMaxToAdd += 1f / 16f;
+		if (yMax == 1f && level > 0.99f
+				&& ((above != null && above.getFluid() != null && above.getFluid().amount != 0) || isFlow))
+			yMaxToAdd += 1f / 16f - 0.001f;
 		block.setBlockBounds(xMin, yMin, zMin, xMax, (14f / 16f) * level + yMaxToAdd, zMax);
 		renderer.setRenderBoundsFromBlock(block);
 		boolean doLight = true;
