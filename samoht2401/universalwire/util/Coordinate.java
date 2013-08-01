@@ -1,9 +1,5 @@
 package samoht2401.universalwire.util;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-
 import net.minecraftforge.common.ForgeDirection;
 
 public class Coordinate {

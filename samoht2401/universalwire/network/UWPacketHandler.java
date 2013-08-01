@@ -3,7 +3,6 @@ package samoht2401.universalwire.network;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 
-import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.render.RenderInfoCable;
 import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.render.RenderInfoTank;

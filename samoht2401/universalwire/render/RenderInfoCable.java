@@ -5,12 +5,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import org.apache.commons.lang3.text.WordUtils;
-
 import samoht2401.universalwire.network.ISerializable;
 
 import net.minecraft.util.Icon;
-import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 
 public class RenderInfoCable implements ISerializable {

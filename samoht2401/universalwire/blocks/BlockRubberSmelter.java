@@ -10,7 +10,7 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -51,12 +51,12 @@ public class BlockRubberSmelter extends BlockContainer {
 		return this.side;
 	}
 	
-	//@Override
-	public void onBlockPlacedBy(World w, int x, int y, int z, EntityLiving entity, ItemStack itemStack)
+	@Override
+	public void onBlockPlacedBy(World w, int x, int y, int z, EntityLivingBase entity, ItemStack itemStack)
 	{
 		super.onBlockPlacedBy(w, x, y, z, entity, itemStack);
 		byte metadata = 0;
-        int l1 = MathHelper.floor_double((double)(entity.rotationYaw * 4.0F / 360.0F) + 0.5D) & 3;
+        int l1 = MathHelper.floor_double(entity.rotationYaw * 4.0F / 360.0F + 0.5D) & 3;
         if (l1 == 0)
         	metadata = Constantes.North;
         if (l1 == 1)

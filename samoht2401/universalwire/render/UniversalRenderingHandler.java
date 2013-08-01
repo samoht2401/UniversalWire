@@ -10,14 +10,12 @@ import samoht2401.universalwire.tileentity.TileEntityTank;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.Fluid;
-import cpw.mods.fml.client.FMLClientHandler;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
 
 public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
@@ -217,7 +215,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.NORTH)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(min, min, 0f, max, max, min);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -248,7 +246,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.SOUTH)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(min, min, max, max, max, 1.0f);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -278,7 +276,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.WEST)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(0f, min, min, min, max, max);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -308,7 +306,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.EAST)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(max, min, min, 1f, max, max);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -338,7 +336,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.UP)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(min, max, min, max, 1f, max);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -368,7 +366,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			if (te.getConnections().contains(ForgeDirection.DOWN)) {
 				min = BlockCable.CABLE_MIN_SIZE;
 				max = BlockCable.CABLE_MAX_SIZE;
-				((TileEntityCable) te).setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
+				te.setCurrentTexture(BlockCable.CABLEB_TEX_INDEX);
 				block.setBlockBounds(min, 0f, min, max, min, max);
 				renderer.setRenderBoundsFromBlock(block);
 				renderer.renderStandardBlock(block, x, y, z);
@@ -400,12 +398,12 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 	}
 
 	private void renderTank(IBlockAccess world, int x, int y, int z, BlockTank block, int modelId, RenderBlocks renderer) {
-		float min = block.TANK_MIN;
-		float max = block.TANK_MAX;
+		float min = BlockTank.TANK_MIN;
+		float max = BlockTank.TANK_MAX;
 		float boardOffset = 1f / 16f;
 		float boardLiqOffset = 1f / 16f + 0.001f;
-		Icon texColor = block.colorIcon;
-		Icon texGlass = block.glassIcon;
+		Icon texColor = BlockTank.colorIcon;
+		Icon texGlass = BlockTank.glassIcon;
 
 		boolean xNeg = world.getBlockId(x - 1, y, z) == block.blockID;
 		boolean xPos = world.getBlockId(x + 1, y, z) == block.blockID;
@@ -446,7 +444,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		boolean hasFrameYPosXPos = false;
 		boolean hasFrameYPosZNeg = false;
 		boolean hasFrameYPosZPos = false;
-		block.currentIcon = texColor;
+		BlockTank.currentIcon = texColor;
 		// Bottom
 		if ((!yNeg && !xNeg) || (yNeg && xNeg && !dYNegXNeg)) {
 			block.setBlockBounds(min, 0f, zMin, min + boardOffset, boardOffset, zMax);
@@ -530,7 +528,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		boolean hasGlassYPos = false;
 		boolean hasGlassZNeg = false;
 		boolean hasGlassZPos = false;
-		block.currentIcon = texGlass;
+		BlockTank.currentIcon = texGlass;
 		if (!xNeg) {
 			yMin = 0f;
 			yMax = 1f;
@@ -542,7 +540,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			zMax -= hasFrameXNegZPos ? boardOffset : 0;
 			block.setBlockBounds(min, yMin, zMin, min + boardOffset, yMax, zMax);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'y', 'z', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'y', 'z', false);
 			hasGlassXNeg = true;
 		}
 		if (!xPos) {
@@ -556,7 +554,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			zMax -= hasFrameXPosZPos ? boardOffset : 0;
 			block.setBlockBounds(max - boardOffset, yMin, zMin, max, yMax, zMax);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'y', 'z', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'y', 'z', false);
 			hasGlassXPos = true;
 		}
 		if (!zNeg) {
@@ -570,7 +568,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			yMax -= hasFrameYPosZNeg ? boardOffset : 0;
 			block.setBlockBounds(xMin, yMin, min, xMax, yMax, min + boardOffset);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'x', 'y', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'x', 'y', false);
 			hasGlassZNeg = true;
 		}
 		if (!zPos) {
@@ -584,7 +582,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			yMax -= hasFrameYPosZPos ? boardOffset : 0;
 			block.setBlockBounds(xMin, yMin, max - boardOffset, xMax, yMax, max);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'x', 'y', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'x', 'y', false);
 			hasGlassZPos = true;
 		}
 		if (!yNeg) {
@@ -598,7 +596,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			zMax -= hasFrameYNegZPos ? boardOffset : 0;
 			block.setBlockBounds(xMin, 0f, zMin, xMax, boardOffset, zMax);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'x', 'z', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'x', 'z', false);
 			hasGlassYNeg = true;
 		}
 		if (!yPos) {
@@ -612,7 +610,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			zMax -= hasFrameYPosZPos ? boardOffset : 0;
 			block.setBlockBounds(xMin, 1f - boardOffset, zMin, xMax, 1f, zMax);
 			renderer.setRenderBoundsFromBlock(block);
-			renderAllFaceExeptAxe(renderer, block, block.currentIcon, x, y, z, 'x', 'z', false);
+			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'x', 'z', false);
 			hasGlassYPos = true;
 		}
 

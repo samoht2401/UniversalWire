@@ -1,8 +1,5 @@
 package samoht2401.universalwire.blocks;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.tileentity.TileEntityTank;
 import cpw.mods.fml.relauncher.Side;
@@ -11,19 +8,12 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Icon;
-import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidContainerRegistry;
-import net.minecraftforge.fluids.FluidStack;
 
 public class BlockTank extends BlockContainer {
 

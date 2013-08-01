@@ -2,13 +2,7 @@ package samoht2401.universalwire.system;
 
 import ic2.api.Direction;
 import ic2.api.energy.tile.IEnergySink;
-import ic2.api.energy.tile.IEnergyTile;
-
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 
 import buildcraft.api.power.IPowerEmitter;
@@ -16,9 +10,6 @@ import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
 
-import cpw.mods.fml.client.FMLClientHandler;
-
-import samoht2401.universalwire.CommonProxy;
 import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.network.PacketIDs;
 import samoht2401.universalwire.network.PacketSerializableInfo;
@@ -26,12 +17,9 @@ import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.tileentity.TileEntityCable;
 import samoht2401.universalwire.util.Coordinate;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldServerMulti;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.common.ForgeDirection;
 

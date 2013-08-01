@@ -7,14 +7,9 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.render.RenderInfoCable;
-import samoht2401.universalwire.system.ItemType;
-import samoht2401.universalwire.system.SystemManager;
 import samoht2401.universalwire.tileentity.TileEntityCable;
-import samoht2401.universalwire.tileentity.TileEntityRubberSmelter;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
@@ -185,6 +180,7 @@ public class BlockCable extends BlockContainer {
 				(double) z + zMax);
 	}
 
+	@Override
 	@SideOnly(Side.CLIENT)
 	public Icon getBlockTexture(IBlockAccess iblockaccess, int x, int y, int z, int meta) {
 

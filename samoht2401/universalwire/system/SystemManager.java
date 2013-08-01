@@ -6,24 +6,13 @@ import ic2.api.energy.tile.IEnergyTile;
 import ic2.core.block.wiring.TileEntityElectricBlock;
 import ic2.core.block.wiring.TileEntityTransformer;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-
 import buildcraft.api.power.IPowerReceptor;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.src.ModLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.ForgeDirection;
 
 import samoht2401.universalwire.render.RenderInfoSystem;
@@ -46,7 +35,7 @@ public class SystemManager {
 
 	public ArrayList<ForgeDirection> getCableConnections(World w, Coordinate coord) {
 		ArrayList<ForgeDirection> result = new ArrayList<ForgeDirection>();
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return result;
 		System s = getSystem(w, coord);
 		if (s == null)
@@ -61,7 +50,7 @@ public class SystemManager {
 
 	public ArrayList<ForgeDirection> getConnections(World w, Coordinate coord) {
 		ArrayList<ForgeDirection> result = new ArrayList<ForgeDirection>();
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return result;
 		System s = getSystem(w, coord);
 		if (s == null)
@@ -98,7 +87,7 @@ public class SystemManager {
 	}
 
 	private System getSystem(World w, Coordinate coord) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return null;
 		for (System system : systems) {
 			if (system.getWorld() != w)
@@ -118,7 +107,7 @@ public class SystemManager {
 	}
 
 	private System getSystem(World w, TileEntity tileEntity) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return null;
 		for (System system : systems) {
 			if (system.getWorld() != w)
@@ -135,7 +124,7 @@ public class SystemManager {
 	}
 
 	public void addItem(World w, Coordinate coord, TileEntity tileEntity) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return;
 		if (ModLoader.isModLoaded("IC2") && (tileEntity instanceof TileEntityElectricBlock || tileEntity instanceof TileEntityTransformer))
 			return;
@@ -177,7 +166,7 @@ public class SystemManager {
 	}
 
 	private void checkForAdjacentBlock(World w, Coordinate coord) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return;
 		for (int i = 0; i < 6; i++) {
 			Coordinate c = coord.getTouching(ForgeDirection.getOrientation(i));
@@ -194,7 +183,7 @@ public class SystemManager {
 	}
 
 	private void checkForFantomAdjacentBlock(World w, Coordinate coord) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return;
 		for (int i = 0; i < 6; i++) {
 			Coordinate c = coord.getTouching(ForgeDirection.getOrientation(i));
@@ -214,7 +203,7 @@ public class SystemManager {
 	}
 
 	public void removeItem(World w, Coordinate coord) {
-		if (w instanceof WorldClient)
+		if (w.isRemote)
 			return;
 		System s = getSystem(w, coord);
 		if (s == null)
@@ -242,7 +231,7 @@ public class SystemManager {
 	}
 
 	public void unloadWorld(World world) {
-		if (world instanceof WorldClient)
+		if (world.isRemote)
 			return;
 		ArrayList<System> toRemove = new ArrayList<System>();
 		for (System s : systems)

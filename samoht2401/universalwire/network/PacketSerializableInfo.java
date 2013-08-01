@@ -3,9 +3,6 @@ package samoht2401.universalwire.network;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-
-import samoht2401.universalwire.render.RenderInfoSystem;
 
 public class PacketSerializableInfo extends UWPacket {
 

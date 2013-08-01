@@ -1,22 +1,16 @@
 package samoht2401.universalwire.gui;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.util.Icon;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StatCollector;
-import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
 
 import org.lwjgl.opengl.GL11;
 
-import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.container.ContainerRubberSmelter;
 import samoht2401.universalwire.tileentity.TileEntityRubberSmelter;
-import samoht2401.universalwire.util.Constantes;
 
 public class GuiRubberSmelter extends GuiContainer {
 

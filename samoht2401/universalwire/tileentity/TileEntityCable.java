@@ -2,9 +2,12 @@ package samoht2401.universalwire.tileentity;
 
 import java.util.ArrayList;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
-
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Icon;
+import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeDirection;
 import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.network.ISerializable;
 import samoht2401.universalwire.network.ISynchronisable;
@@ -14,21 +17,13 @@ import samoht2401.universalwire.render.RenderInfoCable;
 import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.system.BufferManager;
 import samoht2401.universalwire.system.IEnergyBuffer;
-import samoht2401.universalwire.system.ItemType;
 import samoht2401.universalwire.system.System;
-
-import buildcraft.api.core.BuildCraftAPI;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
 import buildcraft.api.power.PowerHandler.Type;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.Icon;
-import net.minecraft.world.World;
-import net.minecraftforge.common.ForgeDirection;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 
 public class TileEntityCable extends TileEntity implements ISynchronisable, IEnergyBuffer, IPowerReceptor {
 
@@ -64,22 +59,6 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 		return null;
 	}
 
-	public void updatePowerDispo(World w, int x, int y, int z, ForgeDirection dir) {
-		int x1, y1, z1;
-		x1 = x + dir.offsetX;
-		y1 = y + dir.offsetY;
-		z1 = z + dir.offsetZ;
-		TileEntity tile = w.getBlockTileEntity(x1, y1, z1);
-		if (tile instanceof TileEntityCable) {
-			TileEntityCable cable = (TileEntityCable) tile;
-			cable.getPowerTotalDispoTo(dir.OPPOSITES);
-		}
-	}
-
-	private void getPowerTotalDispoTo(int[] opposites) {
-
-	}
-
 	public float getColorRatio() {
 		RenderInfoSystem ris = RenderInfoSystem.get(renderInfo.systemId);
 		if (ris != null)
@@ -100,7 +79,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 	}
 
 	public void onAdded() {
-		if (worldObj instanceof WorldClient)
+		if (worldObj.isRemote)
 			return;
 		UniversalWire.systemManager.addItem(worldObj, xCoord, yCoord, zCoord, this);
 		renderInfo.x = xCoord;
@@ -110,7 +89,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 	}
 
 	public void onNeighborBlockChange(World world, int x, int y, int z, int id) {
-		if (worldObj instanceof WorldClient)
+		if (worldObj.isRemote)
 			return;
 		UniversalWire.systemManager.onNeighbotBlockChange(world, x, y, z, id);
 		checkConnections();
@@ -130,7 +109,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 		// updateRender();
 		if (ris != null && oldColorRatio != ris.buffer.getFillRatio(this))
 			updateRender();
-		if (worldObj instanceof WorldClient || !checkValidity())
+		if (worldObj.isRemote || !checkValidity())
 			return;
 		if (!hasBeenAddedToSystem) {
 			UniversalWire.systemManager.addItem(worldObj, xCoord, yCoord, zCoord, this);
@@ -140,7 +119,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 	}
 
 	public void checkConnections() {
-		if (worldObj instanceof WorldClient || !checkValidity())
+		if (worldObj.isRemote || !checkValidity())
 			return;
 		renderInfo.connections = UniversalWire.systemManager.getConnections(worldObj, xCoord, yCoord, zCoord);
 		// renderInfo.systemId =

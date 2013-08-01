@@ -4,7 +4,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.world.World;
-import cpw.mods.fml.client.FMLClientHandler;
 
 public class CommonProxy {
 

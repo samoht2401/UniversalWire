@@ -2,13 +2,11 @@ package samoht2401.universalwire.tileentity;
 
 import java.util.ArrayList;
 
-import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.blocks.BlockTank;
 import samoht2401.universalwire.network.ISerializable;
 import samoht2401.universalwire.network.ISynchronisable;
 import samoht2401.universalwire.network.PacketIDs;
 import samoht2401.universalwire.network.PacketSerializableInfo;
-import samoht2401.universalwire.render.RenderInfoCable;
 import samoht2401.universalwire.render.RenderInfoTank;
 import samoht2401.universalwire.util.SpecialFluidTank;
 import net.minecraft.block.Block;
@@ -24,7 +22,6 @@ import net.minecraftforge.fluids.FluidContainerRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
 import net.minecraftforge.fluids.FluidTankInfo;
-import net.minecraftforge.fluids.IFluidContainerItem;
 import net.minecraftforge.fluids.IFluidHandler;
 
 public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchronisable {

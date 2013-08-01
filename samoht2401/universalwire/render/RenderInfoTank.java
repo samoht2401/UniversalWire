@@ -3,10 +3,6 @@ package samoht2401.universalwire.render;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-
-import net.minecraft.util.Icon;
-import net.minecraftforge.common.ForgeDirection;
 import samoht2401.universalwire.network.ISerializable;
 
 public class RenderInfoTank implements ISerializable {
