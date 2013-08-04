@@ -3,6 +3,7 @@ package samoht2401.universalwire.blocks;
 import java.util.ArrayList;
 import java.util.List;
 
+import buildcraft.api.tools.IToolWrench;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import samoht2401.universalwire.UniversalWire;
@@ -13,6 +14,9 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IconRegister;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Icon;
@@ -51,9 +55,9 @@ public class BlockCable extends BlockContainer {
 	public boolean renderAsNormalBlock() {
 		return false;
 	}
-	
+
 	@Override
-	public Icon getIcon(int face, int meta){
+	public Icon getIcon(int face, int meta) {
 		return genericRenderInfo.textures[CABLE_TEX_INDEX];
 	}
 
@@ -90,7 +94,7 @@ public class BlockCable extends BlockContainer {
 	@Override
 	public void onBlockAdded(World world, int x, int y, int z) {
 		super.onBlockAdded(world, x, y, z);
-		//UniversalWire.systemManager.addItem(world, x, y, z, ItemType.cable);
+		// UniversalWire.systemManager.addItem(world, x, y, z, ItemType.cable);
 		TileEntity te = world.getBlockTileEntity(x, y, z);
 		if (te instanceof TileEntityCable)
 			((TileEntityCable) te).onAdded();
@@ -113,7 +117,23 @@ public class BlockCable extends BlockContainer {
 	}
 
 	@Override
-	public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB axisalignedbb, List arraylist, Entity entity) {
+	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7,
+			float par8, float par9) {
+		Item equipped = player.getCurrentEquippedItem() != null ? player.getCurrentEquippedItem().getItem() : null;
+		if (equipped instanceof IToolWrench && ((IToolWrench) equipped).canWrench(player, x, y, z)) {
+			if(world.isRemote)
+				return true;
+			world.destroyBlock(x, y, z, true);
+			((IToolWrench) equipped).wrenchUsed(player, x, y, z);
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public void addCollisionBoxesToList(World world, int x, int y, int z, AxisAlignedBB axisalignedbb, List arraylist,
+			Entity entity) {
 		resetBlockBound();
 		super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
 
@@ -176,8 +196,8 @@ public class BlockCable extends BlockContainer {
 			if (te.getConnections().contains(ForgeDirection.DOWN))
 				yMin = 0f;
 		}
-		return AxisAlignedBB.getBoundingBox((double) x + xMin, (double) y + yMin, (double) z + zMin, (double) x + xMax, (double) y + yMax,
-				(double) z + zMax);
+		return AxisAlignedBB.getBoundingBox((double) x + xMin, (double) y + yMin, (double) z + zMin, (double) x + xMax,
+				(double) y + yMax, (double) z + zMax);
 	}
 
 	@Override
