@@ -12,9 +12,8 @@ public class RenderInfoTank implements ISerializable {
 	public int z;
 	public int fluidId;
 	public int amount;
-	public int[] fluidFromFace;
-	public boolean isLiquidGoDown;
-	public int[] isLiquidCommingTop;
+	public boolean[] fluidFaceFlowing;
+	public boolean fluidFromTop;
 
 	@Override
 	public void writeData(DataOutputStream data) throws IOException {
@@ -23,15 +22,11 @@ public class RenderInfoTank implements ISerializable {
 		data.writeInt(z);
 		data.writeInt(fluidId);
 		data.writeInt(amount);
-		data.writeInt(fluidFromFace.length);
-		for (int i = 0; i < fluidFromFace.length; i++) {
-			data.writeInt(fluidFromFace[i]);
+		data.writeInt(fluidFaceFlowing.length);
+		for (int i = 0; i < fluidFaceFlowing.length; i++) {
+			data.writeBoolean(fluidFaceFlowing[i]);
 		}
-		data.writeBoolean(isLiquidGoDown);
-		data.writeInt(isLiquidCommingTop.length);
-		for (int i = 0; i < isLiquidCommingTop.length; i++) {
-			data.writeInt(isLiquidCommingTop[i]);
-		}
+		data.writeBoolean(fluidFromTop);
 	}
 
 	@Override
@@ -42,15 +37,10 @@ public class RenderInfoTank implements ISerializable {
 		fluidId = data.readInt();
 		amount = data.readInt();
 		int length = data.readInt();
-		fluidFromFace = new int[length];
+		fluidFaceFlowing = new boolean[length];
 		for (int i = 0; i < length; i++) {
-			fluidFromFace[i] = data.readInt();
+			fluidFaceFlowing[i] = data.readBoolean();
 		}
-		isLiquidGoDown = data.readBoolean();
-		length = data.readInt();
-		isLiquidCommingTop = new int[length];
-		for (int i = 0; i < length; i++) {
-			isLiquidCommingTop[i] = data.readInt();
-		}
+		fluidFromTop = data.readBoolean();
 	}
 }

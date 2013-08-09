@@ -27,17 +27,17 @@ import net.minecraftforge.fluids.IFluidHandler;
 public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchronisable {
 
 	private SpecialFluidTank tank;
-	public int[] fluidFromFace;
-	public boolean isLiquidGoingDown;
-	public int[] liquidCommingTop;
+	public boolean[] fluidFromFace;
+	public boolean[] fluidFaceFlowing;
+	public boolean fluidFromTop;
 	private boolean hasUpdate;
 	private Packet nextPacket;
 
 	public TileEntityTank() {
 		tank = new SpecialFluidTank(BlockTank.TANK_CAPACITY);
-		fluidFromFace = new int[4];
-		isLiquidGoingDown = false;
-		liquidCommingTop = new int[4];
+		fluidFromFace = new boolean[4];
+		fluidFaceFlowing = new boolean[4];
+		fluidFromTop = false;
 		nextPacket = null;
 	}
 
@@ -74,13 +74,13 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 
 		if (hasUpdate) {
 			updateData();
-			int[] old_fluidFromFace =fluidFromFace.clone();
-			 boolean old_isLiquidGoingDown=isLiquidGoingDown;
-			 int[] old_liquidCommingTop=liquidCommingTop.clone();
-			fluidFromFace = new int[4];
-			isLiquidGoingDown = false;
-			liquidCommingTop = new int[4];
-			if(old_fluidFromFace == fluidFromFace && old_isLiquidGoingDown == isLiquidGoingDown && old_liquidCommingTop == liquidCommingTop)
+			boolean[] old_fluidFaceFlowing = fluidFaceFlowing.clone();
+			boolean old_fluidFromTop = fluidFromTop;
+
+			fluidFromFace = new boolean[4];
+			fluidFaceFlowing = new boolean[4];
+			fluidFromTop = false;
+			if (old_fluidFaceFlowing == fluidFaceFlowing && old_fluidFaceFlowing == fluidFaceFlowing)
 				hasUpdate = false;
 		}
 	}
@@ -148,16 +148,15 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 		int used = below.tank.fill(tank.getFluid(), true);
 		if (used > 0) {
 			tank.drain(used, true);
-			below.liquidCommingTop = liquidCommingTop.clone();
-			if (fluidFromFace[0] != 0)
-				below.liquidCommingTop[0] = fluidFromFace[0];
-			if (fluidFromFace[1] != 0)
-				below.liquidCommingTop[1] = fluidFromFace[1];
-			if (fluidFromFace[2] != 0)
-				below.liquidCommingTop[2] = fluidFromFace[2];
-			if (fluidFromFace[3] != 0)
-				below.liquidCommingTop[3] = fluidFromFace[3];
-			isLiquidGoingDown = true;
+			below.fluidFromTop = fluidFromTop;
+			below.fluidFaceFlowing[0] = fluidFromFace[0];
+			below.fluidFaceFlowing[1] = fluidFromFace[1];
+			below.fluidFaceFlowing[2] = fluidFromFace[2];
+			below.fluidFaceFlowing[3] = fluidFromFace[3];
+			below.fluidFromFace[0] = fluidFromFace[0];
+			below.fluidFromFace[1] = fluidFromFace[1];
+			below.fluidFromFace[2] = fluidFromFace[2];
+			below.fluidFromFace[3] = fluidFromFace[3];
 			hasUpdate = true;
 			below.hasUpdate = true;
 		}
@@ -222,12 +221,12 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 			if (other.tank.getFluidAmount() < splitAmount) {
 				int filled = other.tank.fill(new FluidStack(fluid, splitAmount - other.tank.getFluidAmount()), true);
 				balance += filled;
-				other.fluidFromFace[other.getDirectionTo(this).ordinal() - 2] = filled;
+				other.fluidFromFace[other.getDirectionTo(this).ordinal() - 2] = true;
 			}
 			else if (other.tank.getFluidAmount() > splitAmount) {
 				int drained = other.tank.drain(other.tank.getFluidAmount() - splitAmount, true).amount;
 				balance -= drained;
-				fluidFromFace[getDirectionTo(other).ordinal() - 2] = drained;
+				fluidFromFace[getDirectionTo(other).ordinal() - 2] = true;
 			}
 			else
 				continue;
@@ -428,9 +427,8 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 			info.fluidId = tank.getFluid().fluidID;
 			info.amount = tank.getFluid().amount;
 		}
-		info.fluidFromFace = fluidFromFace;
-		info.isLiquidGoDown = isLiquidGoingDown;
-		info.isLiquidCommingTop = liquidCommingTop;
+		info.fluidFaceFlowing = fluidFaceFlowing;
+		info.fluidFromTop = fluidFromTop;
 		packet.info = info;
 		nextPacket = packet.getPacket();
 	}
@@ -442,10 +440,8 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 				tank.setFluid(new FluidStack(((RenderInfoTank) info).fluidId, ((RenderInfoTank) info).amount));
 			else
 				tank.setFluid(null);
-			fluidFromFace = ((RenderInfoTank) info).fluidFromFace;
-			isLiquidGoingDown = ((RenderInfoTank) info).isLiquidGoDown;
-			liquidCommingTop = ((RenderInfoTank) info).isLiquidCommingTop;
-			updateRender();
+			fluidFaceFlowing = ((RenderInfoTank) info).fluidFaceFlowing;
+			fluidFromTop = ((RenderInfoTank) info).fluidFromTop;
 		}
 	}
 
@@ -454,7 +450,24 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 		worldObj.markBlockForUpdate(xCoord, yCoord, zCoord);
 	}
 
-	public void updateRender() {
-		worldObj.markBlockForRenderUpdate(xCoord, yCoord, zCoord);
+	public boolean shouldRenderFluidLevel() {
+		return getTankBelow(this) == null || getTankBelow(this).isFull();
 	}
+
+	public boolean isConnected(ForgeDirection direction) {
+		return worldObj.getBlockId(xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ) == this.blockType.blockID;
+	}
+
+	public TileEntityTank getTank(ForgeDirection direction) {
+		TileEntity te = worldObj.getBlockTileEntity(xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord
+				+ direction.offsetZ);
+		if (te instanceof TileEntityTank)
+			return (TileEntityTank) te;
+		return null;
+	}
+
+	/*
+	 * public void updateRender() { worldObj.markBlockForRenderUpdate(xCoord,
+	 * yCoord, zCoord); }
+	 */
 }

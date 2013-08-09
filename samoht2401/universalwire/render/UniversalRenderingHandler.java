@@ -614,7 +614,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			hasGlassYPos = true;
 		}
 
-		// Liquid
+		/*// Liquid
 		TileEntity te = world.getBlockTileEntity(x, y, z);
 		if (te instanceof TileEntityTank) {
 			TileEntityTank tile = (TileEntityTank) te;
@@ -688,7 +688,7 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 							yMin, zMin, xMax, yMax, zMax, false);
 				}
 			}
-		}
+		}*/
 
 		block.resetBlockBound(world, x, y, z);
 	}
