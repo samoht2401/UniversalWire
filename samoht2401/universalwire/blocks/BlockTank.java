@@ -13,6 +13,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidContainerRegistry;
 
 public class BlockTank extends BlockContainer {
@@ -85,5 +86,12 @@ public class BlockTank extends BlockContainer {
 		float maxX, maxY, maxZ;
 		maxX = maxY = maxZ = TANK_MAX;
 		setBlockBounds(minX, 0f, minZ, maxX, 1f, maxZ);
+	}
+	
+	public boolean isConnected(IBlockAccess world, int x, int y, int z, ForgeDirection direction){
+		TileEntity te = world.getBlockTileEntity(x, y, z);
+		if(te instanceof TileEntityTank)
+			return ((TileEntityTank)te).isConnected(direction);
+		return false;
 	}
 }

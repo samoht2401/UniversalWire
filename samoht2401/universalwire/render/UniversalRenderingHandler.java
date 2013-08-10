@@ -405,24 +405,36 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 		Icon texColor = BlockTank.colorIcon;
 		Icon texGlass = BlockTank.glassIcon;
 
-		boolean xNeg = world.getBlockId(x - 1, y, z) == block.blockID;
-		boolean xPos = world.getBlockId(x + 1, y, z) == block.blockID;
-		boolean yNeg = world.getBlockId(x, y - 1, z) == block.blockID;
-		boolean yPos = world.getBlockId(x, y + 1, z) == block.blockID;
-		boolean zNeg = world.getBlockId(x, y, z - 1) == block.blockID;
-		boolean zPos = world.getBlockId(x, y, z + 1) == block.blockID;
-		boolean dXNegZNeg = world.getBlockId(x - 1, y, z - 1) == block.blockID;
-		boolean dXNegZPos = world.getBlockId(x - 1, y, z + 1) == block.blockID;
-		boolean dXPosZNeg = world.getBlockId(x + 1, y, z - 1) == block.blockID;
-		boolean dXPosZPos = world.getBlockId(x + 1, y, z + 1) == block.blockID;
-		boolean dYPosXNeg = world.getBlockId(x - 1, y + 1, z) == block.blockID;
-		boolean dYPosXPos = world.getBlockId(x + 1, y + 1, z) == block.blockID;
-		boolean dYPosZNeg = world.getBlockId(x, y + 1, z - 1) == block.blockID;
-		boolean dYPosZPos = world.getBlockId(x, y + 1, z + 1) == block.blockID;
-		boolean dYNegXNeg = world.getBlockId(x - 1, y - 1, z) == block.blockID;
-		boolean dYNegXPos = world.getBlockId(x + 1, y - 1, z) == block.blockID;
-		boolean dYNegZNeg = world.getBlockId(x, y - 1, z - 1) == block.blockID;
-		boolean dYNegZPos = world.getBlockId(x, y - 1, z + 1) == block.blockID;
+		boolean xNeg = block.isConnected(world, x, y, z, ForgeDirection.WEST);
+		boolean xPos = block.isConnected(world, x, y, z, ForgeDirection.EAST);
+		boolean yNeg = block.isConnected(world, x, y, z, ForgeDirection.DOWN);
+		boolean yPos = block.isConnected(world, x, y, z, ForgeDirection.UP);
+		boolean zNeg = block.isConnected(world, x, y, z, ForgeDirection.NORTH);
+		boolean zPos = block.isConnected(world, x, y, z, ForgeDirection.SOUTH);
+		boolean dXNegZNeg = xNeg ? block.isConnected(world, x - 1, y, z, ForgeDirection.NORTH) : false;
+		dXNegZNeg = dXNegZNeg || (zNeg ? block.isConnected(world, x, y, z - 1, ForgeDirection.WEST) : false);
+		boolean dXNegZPos = xNeg ? block.isConnected(world, x - 1, y, z, ForgeDirection.SOUTH) : false;
+		dXNegZPos = dXNegZPos || (zPos ? block.isConnected(world, x, y, z + 1, ForgeDirection.WEST) : false);
+		boolean dXPosZNeg = xPos ? block.isConnected(world, x + 1, y, z, ForgeDirection.NORTH) : false;
+		dXPosZNeg = dXPosZNeg || (zNeg ? block.isConnected(world, x, y, z - 1, ForgeDirection.EAST) : false);
+		boolean dXPosZPos = xPos ? block.isConnected(world, x + 1, y, z, ForgeDirection.SOUTH) : false;
+		dXPosZPos = dXPosZPos || (zPos ? block.isConnected(world, x, y, z + 1, ForgeDirection.EAST) : false);
+		boolean dYPosXNeg = yPos ? block.isConnected(world, x, y + 1, z, ForgeDirection.WEST) : false;
+		dYPosXNeg = dYPosXNeg || (xNeg ? block.isConnected(world, x - 1, y, z, ForgeDirection.UP) : false);
+		boolean dYPosXPos = yPos ? block.isConnected(world, x, y + 1, z, ForgeDirection.EAST) : false;
+		dYPosXPos = dYPosXPos || (xPos ? block.isConnected(world, x + 1, y, z, ForgeDirection.UP) : false);
+		boolean dYPosZNeg = yPos ? block.isConnected(world, x, y + 1, z, ForgeDirection.NORTH) : false;
+		dYPosZNeg = dYPosZNeg || (zNeg ? block.isConnected(world, x, y, z - 1, ForgeDirection.UP) : false);
+		boolean dYPosZPos = yPos ? block.isConnected(world, x, y + 1, z, ForgeDirection.SOUTH) : false;
+		dYPosZPos = dYPosZPos || (zPos ? block.isConnected(world, x, y, z + 1, ForgeDirection.UP) : false);
+		boolean dYNegXNeg = yNeg ? block.isConnected(world, x, y - 1, z, ForgeDirection.WEST) : false;
+		dYNegXNeg = dYNegXNeg || (xNeg ? block.isConnected(world, x - 1, y, z, ForgeDirection.DOWN) : false);
+		boolean dYNegXPos = yNeg ? block.isConnected(world, x, y - 1, z, ForgeDirection.EAST) : false;
+		dYNegXPos = dYNegXPos || (xPos ? block.isConnected(world, x + 1, y, z, ForgeDirection.DOWN) : false);
+		boolean dYNegZNeg = yNeg ? block.isConnected(world, x, y - 1, z, ForgeDirection.NORTH) : false;
+		dYNegZNeg = dYNegZNeg || (zNeg ? block.isConnected(world, x, y, z - 1, ForgeDirection.DOWN) : false);
+		boolean dYNegZPos = yNeg ? block.isConnected(world, x, y - 1, z, ForgeDirection.SOUTH) : false;
+		dYNegZPos = dYNegZPos || (zPos ? block.isConnected(world, x, y, z + 1, ForgeDirection.DOWN) : false);
 
 		float xMin = xNeg ? 0f : min;
 		float xMax = xPos ? 1f : max;
@@ -613,82 +625,6 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			renderAllFaceExeptAxe(renderer, block, BlockTank.currentIcon, x, y, z, 'x', 'z', false);
 			hasGlassYPos = true;
 		}
-
-		/*// Liquid
-		TileEntity te = world.getBlockTileEntity(x, y, z);
-		if (te instanceof TileEntityTank) {
-			TileEntityTank tile = (TileEntityTank) te;
-
-			int o = 0;
-			if (x == -499 && y == 5 && z == -558)
-				o = 1;
-
-			if (tile.getFluid() != null) {
-				float level = (float) (tile.getFluid().amount) / (float) (BlockTank.TANK_CAPACITY);
-				int ldXNeg = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.WEST.ordinal() - 2] : 0;
-				int ldXPos = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.EAST.ordinal() - 2] : 0;
-				int ldZNeg = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.NORTH.ordinal() - 2] : 0;
-				int ldZPos = tile.isLiquidGoingDown ? tile.fluidFromFace[ForgeDirection.SOUTH.ordinal() - 2] : 0;
-				int ltXNeg = tile.liquidCommingTop[ForgeDirection.WEST.ordinal() - 2];
-				int ltXPos = tile.liquidCommingTop[ForgeDirection.EAST.ordinal() - 2];
-				int ltZNeg = tile.liquidCommingTop[ForgeDirection.NORTH.ordinal() - 2];
-				int ltZPos = tile.liquidCommingTop[ForgeDirection.SOUTH.ordinal() - 2];
-				TileEntityTank below = TileEntityTank.getTankBelow(tile);
-				boolean drawFluidLevel = below == null || below.isFull();
-				boolean liquidFromTop = false;
-
-				xMin = hasGlassXNeg ? boardLiqOffset : 0f;
-				xMax = hasGlassXPos ? 1 - boardLiqOffset : 1f;
-				yMin = hasGlassYNeg ? boardLiqOffset : 0f;
-				yMax = hasGlassYPos ? 1 - boardLiqOffset : 1f;
-				zMin = hasGlassZNeg ? boardLiqOffset : 0f;
-				zMax = hasGlassZPos ? 1 - boardLiqOffset : 1f;
-
-				if (ltXNeg > 0) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f,
-							boardLiqOffset, yMin, zMin, boardLiqOffset + ltXNeg * 0.001f, 1f, zMax, true);
-					liquidFromTop = true;
-				}
-				if (ltXPos > 0) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, 1
-							- boardLiqOffset - ltXPos * 0.001f, yMin, zMin, 1 - boardLiqOffset, 1f, zMax, true);
-					liquidFromTop = true;
-				}
-				if (ltZNeg > 0) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
-							yMin, boardLiqOffset, xMax, 1f, boardLiqOffset + ltZNeg * 0.001f, true);
-					liquidFromTop = true;
-				}
-				if (ltZPos > 0) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, 1f, xMin,
-							yMin, 1 - boardLiqOffset - ltZPos * 0.001f, xMax, 1f, 1 - boardLiqOffset, true);
-					liquidFromTop = true;
-				}
-				float toAdd = boardLiqOffset;
-				if (ldXNeg > 0 && !liquidFromTop) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMin, xMin + ldXNeg * (14f / 16000f - 0.001f) + toAdd, yMax, zMax, true);
-				}
-				if (ldXPos > 0 && !liquidFromTop) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMax
-							- ldXPos * (14f / 16000f - 0.001f) - toAdd, yMin, zMin, xMax, yMax, zMax, true);
-				}
-				if (ldZNeg > 0 && !liquidFromTop) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMin, xMax, yMax, zMin + ldZNeg * (14f / 16000f - 0.001f) + toAdd, true);
-				}
-				if (ldZPos > 0 && !liquidFromTop) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMax - ldZPos * (14f / 16000f - 0.001f) - toAdd, xMax, yMax, zMax, true);
-				}
-
-				te = world.getBlockTileEntity(x, y - 1, z);
-				if (drawFluidLevel && level > 0) {
-					renderLiquidLevel(renderer, world, block, tile, tile.getFluid().getFluid(), x, y, z, level, xMin,
-							yMin, zMin, xMax, yMax, zMax, false);
-				}
-			}
-		}*/
 
 		block.resetBlockBound(world, x, y, z);
 	}

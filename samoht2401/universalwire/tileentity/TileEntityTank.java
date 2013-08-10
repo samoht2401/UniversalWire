@@ -2,6 +2,7 @@ package samoht2401.universalwire.tileentity;
 
 import java.util.ArrayList;
 
+import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.blocks.BlockTank;
 import samoht2401.universalwire.network.ISerializable;
 import samoht2401.universalwire.network.ISynchronisable;
@@ -451,11 +452,13 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 	}
 
 	public boolean shouldRenderFluidLevel() {
-		return getTankBelow(this) == null || getTankBelow(this).isFull();
+		return !isConnected(ForgeDirection.DOWN) || getTankBelow(this).isFull();
 	}
 
 	public boolean isConnected(ForgeDirection direction) {
-		return worldObj.getBlockId(xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ) == this.blockType.blockID;
+		if(worldObj == null)
+			return false;
+		return worldObj.getBlockId(xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ) == UniversalWire.blockTank.blockID;
 	}
 
 	public TileEntityTank getTank(ForgeDirection direction) {
@@ -465,9 +468,4 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 			return (TileEntityTank) te;
 		return null;
 	}
-
-	/*
-	 * public void updateRender() { worldObj.markBlockForRenderUpdate(xCoord,
-	 * yCoord, zCoord); }
-	 */
 }
