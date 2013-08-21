@@ -2,8 +2,9 @@ package samoht2401.universalwire;
 
 import java.util.EnumSet;
 
+import codechicken.microblock.MicroblockClassRegistry;
+
 import ic2.api.energy.event.EnergyTileLoadEvent;
-import ic2.api.energy.event.EnergyTileSourceEvent;
 import ic2.api.energy.event.EnergyTileUnloadEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -125,11 +126,11 @@ public class UniversalWire implements ITickHandler {
 			systemManager.removeItem(event.world, (TileEntity) event.energyTile);
 	}
 
-	@ForgeSubscribe
-	public void EnergySourceEvent(EnergyTileSourceEvent event) {
+	/*@ForgeSubscribe
+	public void EnergySourceEvent(EnergyTileEvent event) {
 		if (event.energyTile instanceof TileEntity)
 			event.amount = systemManager.sourceEvent(event.world, (TileEntity) event.energyTile, event.amount);
-	}
+	}*/
 
 	@ForgeSubscribe
 	public void worldSaveEvent(WorldEvent.Unload event) {

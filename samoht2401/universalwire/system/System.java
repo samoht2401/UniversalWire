@@ -1,6 +1,7 @@
 package samoht2401.universalwire.system;
 
 import ic2.api.Direction;
+import ic2.api.energy.tile.IEnergySource;
 import ic2.api.energy.tile.IEnergySink;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,6 +49,7 @@ public class System {
 	public RenderInfoSystem renderInfo;
 	private World world;
 	private HashMap<Coordinate, TileEntity> items;
+	private ArrayList<IEnergySource> euSources;
 	private ArrayList<IEnergySink> euSinks;
 	private ArrayList<IPowerReceptor> mjSinks;
 	private ArrayList<EqualableChunk> bound;
@@ -62,6 +64,7 @@ public class System {
 		this.id = id;
 		world = w;
 		items = new HashMap<Coordinate, TileEntity>();
+		euSources = new ArrayList<IEnergySource>();
 		euSinks = new ArrayList<IEnergySink>();
 		mjSinks = new ArrayList<IPowerReceptor>();
 		bound = new ArrayList<EqualableChunk>();
@@ -115,6 +118,8 @@ public class System {
 			((TileEntityCable) type).setSystemId(id);
 			((TileEntityCable) type).updateData();
 		}
+		if (type instanceof IEnergySource)
+			euSources.add((IEnergySource) type);
 		if (type instanceof IEnergySink)
 			euSinks.add((IEnergySink) type);
 		if (type instanceof IPowerReceptor && !(type instanceof TileEntityCable))
@@ -230,10 +235,14 @@ public class System {
 			return;
 		int neededEnergy = 0;
 		int oldBuffer = buffer.getBuffer();
+		for(IEnergySource source : euSources)
+		{
+			source.drawEnergy(buffer.pushToBuffer((int) source.getOfferedEnergy() * RATIO_EU_ENERGY));
+		}
 		HashMap<IEnergySink, Integer> demandsEu = new HashMap<IEnergySink, Integer>();
 		HashMap<PowerReceiver, Integer> demandsMj = new HashMap<PowerReceiver, Integer>();
 		for (IEnergySink sink : euSinks) {
-			int demand = sink.demandsEnergy();
+			int demand = (int) sink.demandedEnergyUnits();
 			if (demand > sink.getMaxSafeInput())
 				demand = sink.getMaxSafeInput();
 			demand *= RATIO_EU_ENERGY;
@@ -261,7 +270,7 @@ public class System {
 		}
 		if (buffer.getBuffer() >= neededEnergy) {
 			for (IEnergySink sink : demandsEu.keySet())
-				sink.injectEnergy(Direction.YP, buffer.pullFromBuffer(demandsEu.get(sink)) / RATIO_EU_ENERGY);
+				sink.injectEnergyUnits(ForgeDirection.UP, buffer.pullFromBuffer(demandsEu.get(sink)) / RATIO_EU_ENERGY);
 			for (PowerReceiver sink : demandsMj.keySet())
 				sink.receiveEnergy(PowerHandler.Type.STORAGE, buffer.pullFromBuffer(demandsMj.get(sink))
 						/ RATIO_EU_ENERGY, ForgeDirection.DOWN);
@@ -271,7 +280,7 @@ public class System {
 			if (ratio < 1)
 				return;
 			for (IEnergySink sink : demandsEu.keySet())
-				sink.injectEnergy(Direction.YP,
+				sink.injectEnergyUnits(ForgeDirection.UP,
 						buffer.pullFromBuffer((int) Math.floor(demandsEu.get(sink) / ratio / RATIO_EU_ENERGY)));
 			for (PowerReceiver sink : demandsMj.keySet())
 				sink.receiveEnergy(PowerHandler.Type.STORAGE,
