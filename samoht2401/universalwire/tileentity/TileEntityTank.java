@@ -142,7 +142,7 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 
 	public void moveFluidBelow() {
 		TileEntityTank below = getTankBelow(this);
-		if (below == null) {
+		if (below == null || getFluidAmount() <= 0) {
 			return;
 		}
 
@@ -213,33 +213,37 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 
 		int totalAmount = fluid.amount;
 		for (TileEntityTank other : adjacents)
-			totalAmount += other.tank.getFluidAmount();
+			totalAmount += other.getFluidAmount();
 
-		int splitAmount = totalAmount / (adjacents.size() + 1);
+		int splitAmount = (int) Math.ceil((float) totalAmount / (adjacents.size() + 1));
 		int balance = 0; // Prevent creation or destruction of fluid cause of
 							// Euclidean division
 		for (TileEntityTank other : adjacents) {
-			if (other.tank.getFluidAmount() < splitAmount) {
-				int filled = other.tank.fill(new FluidStack(fluid, splitAmount - other.tank.getFluidAmount()), true);
+			if (other.getFluidAmount() < splitAmount && balance + splitAmount <= tank.getFluidAmount()) {
+				int filled = other.tank.fill(new FluidStack(fluid, splitAmount - other.getFluidAmount()), true);
 				balance += filled;
 				other.fluidFromFace[other.getDirectionTo(this).ordinal() - 2] = true;
+				other.hasUpdate = true;
 			}
-			else if (other.tank.getFluidAmount() > splitAmount) {
-				int drained = other.tank.drain(other.tank.getFluidAmount() - splitAmount, true).amount;
+			else if (other.getFluidAmount() > splitAmount) {
+				int drained = other.tank.drain(other.getFluidAmount() - splitAmount, true).amount;
 				balance -= drained;
 				fluidFromFace[getDirectionTo(other).ordinal() - 2] = true;
+				other.hasUpdate = true;
 			}
-			else
-				continue;
-			other.hasUpdate = true;
 		}
-		hasUpdate = true;
-		if (balance > 0)
+
+		if (balance > 0) {
 			tank.drain(balance, true);
-		else if (balance < 0)
+			TileEntityTank tet = getTankAbove(this);
+			if (tet != null && tet.getFluidAmount() > 0)
+				tet.moveFluidBelow();
+			hasUpdate = true;
+		}
+		else if (balance < 0) {
 			tank.fill(new FluidStack(fluid, -balance), true);
-		else
-			return;
+			hasUpdate = true;
+		}
 	}
 
 	private ForgeDirection getDirectionTo(TileEntityTank tile) {
@@ -456,7 +460,7 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 	}
 
 	public boolean isConnected(ForgeDirection direction) {
-		if(worldObj == null)
+		if (worldObj == null)
 			return false;
 		return worldObj.getBlockId(xCoord + direction.offsetX, yCoord + direction.offsetY, zCoord + direction.offsetZ) == UniversalWire.blockTank.blockID;
 	}
@@ -467,5 +471,12 @@ public class TileEntityTank extends TileEntity implements IFluidHandler, ISynchr
 		if (te instanceof TileEntityTank)
 			return (TileEntityTank) te;
 		return null;
+	}
+
+	public int getFluidAmount() {
+		FluidStack fs = getFluid();
+		if (fs != null)
+			return fs.amount;
+		return 0;
 	}
 }

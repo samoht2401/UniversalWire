@@ -4,15 +4,24 @@ import java.util.HashMap;
 
 import org.lwjgl.opengl.GL11;
 
+import cpw.mods.fml.client.FMLClientHandler;
+
 import samoht2401.universalwire.blocks.BlockTank;
 import samoht2401.universalwire.render.RenderHelper.BlockInterface;
 import samoht2401.universalwire.tileentity.TileEntityTank;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
@@ -157,7 +166,7 @@ public class TankSpecialRenderer extends TileEntitySpecialRenderer {
 		if (tankEntity.shouldRenderFluidLevel() && fluid.amount > 0) {
 			int index = getSideIndex(tankEntity.isConnected(ForgeDirection.WEST),
 					tankEntity.isConnected(ForgeDirection.EAST), tankEntity.isConnected(ForgeDirection.DOWN),
-					tankEntity.isConnected(ForgeDirection.UP), tankEntity.isConnected(ForgeDirection.NORTH),
+					tankEntity.isConnected(ForgeDirection.UP) && TileEntityTank.getTankAbove(tankEntity).getFluidAmount() > 0, tankEntity.isConnected(ForgeDirection.NORTH),
 					tankEntity.isConnected(ForgeDirection.SOUTH));
 
 			func_110628_a(TextureMap.field_110575_b);
@@ -188,7 +197,7 @@ public class TankSpecialRenderer extends TileEntitySpecialRenderer {
 			GL11.glCallList(d.faceFlowing[index][stage]);
 			GL11.glPopMatrix();
 		}
-
+		
 		GL11.glPopMatrix();
 		GL11.glPopAttrib();
 	}
