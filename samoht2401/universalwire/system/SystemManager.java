@@ -126,7 +126,7 @@ public class SystemManager {
 	public void addItem(World w, Coordinate coord, TileEntity tileEntity) {
 		if (w.isRemote)
 			return;
-		if (ModLoader.isModLoaded("IC2") && (tileEntity instanceof TileEntityElectricBlock || tileEntity instanceof TileEntityTransformer))
+		if (ModLoader.isModLoaded("IC2") && (tileEntity instanceof TileEntityTransformer))
 			return;
 		if (isAnyContaining(w, coord))
 			return;
@@ -142,16 +142,38 @@ public class SystemManager {
 			System ns = new System(getNextId(), w);
 			ns.addItem(coord, tileEntity);
 			systems.add(ns);
-		} else if (systemTouching.size() == 1) // Add it to this system
-		{
-			systemTouching.get(0).addItem(coord, tileEntity);
-		} else if (systemTouching.size() > 1) // Merge these system and add it
-												// to the resulting system
-		{
-			System rs = new System(getNextId(), w, systemTouching.toArray(new System[systemTouching.size()]));
+		}
+		else if (systemTouching.size() == 1) {
+			TileEntity te = systemTouching.get(0).touchingBy(coord);
+			if (!ModLoader.isModLoaded("IC2") || !(te instanceof TileEntityElectricBlock))
+				systemTouching.get(0).addItem(coord, tileEntity);
+			else {
+				System ns = new System(getNextId(), w);
+				ns.addItem(new Coordinate(te.xCoord, te.yCoord, te.zCoord), te);
+				ns.addItem(coord, tileEntity);
+				systems.add(ns);
+			}
+
+		}
+		else if (systemTouching.size() > 1) {
+			ArrayList<System> systemToMerge = new ArrayList<System>();
+			for (System s : systemTouching) {
+				TileEntity te = s.touchingBy(coord);
+				if (ModLoader.isModLoaded("IC2") && tileEntity instanceof TileEntityElectricBlock)
+					s.addItem(coord, tileEntity);
+				else if (!ModLoader.isModLoaded("IC2") || !(te instanceof TileEntityElectricBlock))
+					systemToMerge.add(s);
+				else {
+					System ns = new System(getNextId(), w);
+					ns.addItem(new Coordinate(te.xCoord, te.yCoord, te.zCoord), te);
+					systemToMerge.add(ns);
+				}
+
+			}
+			System rs = new System(getNextId(), w, systemToMerge.toArray(new System[systemToMerge.size()]));
 			rs.addItem(coord, tileEntity);
 			systems.add(rs);
-			for (System s : systemTouching)
+			for (System s : systemToMerge)
 				systems.remove(s);
 		}
 		checkForAdjacentBlock(w, coord);
@@ -163,6 +185,24 @@ public class SystemManager {
 
 	public void addItem(World w, TileEntity tileEntity) {
 		addItem(w, new Coordinate(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord), tileEntity);
+	}
+
+	private boolean isForbiddenIntraLink(System systemTouching, Coordinate coord, TileEntity tileEntity) {
+		if (tileEntity instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.DOWN)) instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.UP)) instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.WEST)) instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.EAST)) instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.NORTH)) instanceof TileEntityElectricBlock)
+			return true;
+		if (systemTouching.getItem(coord.getTouching(ForgeDirection.SOUTH)) instanceof TileEntityElectricBlock)
+			return true;
+		return false;
 	}
 
 	private void checkForAdjacentBlock(World w, Coordinate coord) {
@@ -192,9 +232,11 @@ public class SystemManager {
 				continue;
 			TileEntity te = w.getBlockTileEntity((int) c.x, (int) c.y, (int) c.z);
 			if (te == null
-					|| (!(te instanceof TileEntityCable) && !(te instanceof IEnergyEmitter) && !(te instanceof IEnergySink) && !(te instanceof IPowerReceptor)))
+					|| (!(te instanceof TileEntityCable) && !(te instanceof IEnergyEmitter)
+							&& !(te instanceof IEnergySink) && !(te instanceof IPowerReceptor)))
 				removeItem(w, c);
-			else if (!(te instanceof TileEntityCable) && !(te instanceof IEnergyEmitter) && !(te instanceof IEnergySink)) {
+			else if (!(te instanceof TileEntityCable) && !(te instanceof IEnergyEmitter)
+					&& !(te instanceof IEnergySink)) {
 				int nbCo = getCableConnections(w, c).size();
 				if (nbCo == 0)
 					removeItem(w, c);

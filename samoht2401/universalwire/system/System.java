@@ -3,6 +3,9 @@ package samoht2401.universalwire.system;
 import ic2.api.Direction;
 import ic2.api.energy.tile.IEnergySource;
 import ic2.api.energy.tile.IEnergySink;
+import ic2.core.block.wiring.TileEntityTransformer;
+import ic2.core.block.wiring.TileEntityElectricBlock;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -19,6 +22,7 @@ import samoht2401.universalwire.tileentity.TileEntityCable;
 import samoht2401.universalwire.util.Coordinate;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.src.ModLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
@@ -151,6 +155,17 @@ public class System {
 		}
 		return false;
 	}
+	
+	public TileEntity touchingBy(Coordinate coord)
+	{
+		if (!isInBound(coord))
+			return null;
+		for (Coordinate c : items.keySet()) {
+			if (c.isTouching(coord))
+				return getItem(c);
+		}
+		return null;
+	}
 
 	public boolean isContaining(Coordinate coord) {
 		if (!isInBound(coord))
@@ -235,27 +250,43 @@ public class System {
 			return;
 		int neededEnergy = 0;
 		int oldBuffer = buffer.getBuffer();
-		for(IEnergySource source : euSources)
-		{
-			source.drawEnergy(buffer.pushToBuffer((int) source.getOfferedEnergy() * RATIO_EU_ENERGY));
+		for (IEnergySource source : euSources) {
+			ForgeDirection dir = getFirstConnectDirection((TileEntity) source);
+			if (dir != ForgeDirection.UNKNOWN) {
+				TileEntity connectTo = this.getItem(new Coordinate(((TileEntity) source).xCoord + dir.offsetX,
+						((TileEntity) source).yCoord + dir.offsetY, ((TileEntity) source).zCoord + dir.offsetZ));
+				if (connectTo != null && source.emitsEnergyTo(connectTo, dir)) {
+					int offered = (int) source.getOfferedEnergy();
+					int surplus = buffer.pushToBuffer(offered * RATIO_EU_ENERGY) / RATIO_EU_ENERGY;
+					source.drawEnergy(offered - surplus);
+				}
+			}
 		}
 		HashMap<IEnergySink, Integer> demandsEu = new HashMap<IEnergySink, Integer>();
 		HashMap<PowerReceiver, Integer> demandsMj = new HashMap<PowerReceiver, Integer>();
 		for (IEnergySink sink : euSinks) {
-			int demand = (int) sink.demandedEnergyUnits();
-			if (demand > sink.getMaxSafeInput())
-				demand = sink.getMaxSafeInput();
-			demand *= RATIO_EU_ENERGY;
-			if (demand > 0) {
-				neededEnergy += demand;
-				demandsEu.put(sink, demand);
+			ForgeDirection dir = getFirstConnectDirection((TileEntity) sink);
+			if (dir != ForgeDirection.UNKNOWN) {
+				TileEntity connectTo = this.getItem(new Coordinate(((TileEntity) sink).xCoord + dir.offsetX,
+						((TileEntity) sink).yCoord + dir.offsetY, ((TileEntity) sink).zCoord + dir.offsetZ));
+				if (connectTo != null && sink.acceptsEnergyFrom(connectTo, dir)) {
+					int demand = (int) sink.demandedEnergyUnits();
+					if (demand > sink.getMaxSafeInput())
+						demand = sink.getMaxSafeInput();
+					demand *= RATIO_EU_ENERGY;
+					if (demand > 0) {
+						neededEnergy += demand;
+						demandsEu.put(sink, demand);
+					}
+				}
 			}
+
 		}
 		for (IPowerReceptor sink : mjSinks) {
-			if(sink instanceof IPowerEmitter)
+			if (sink instanceof IPowerEmitter)
 				continue;
-			PowerReceiver rec = sink.getPowerReceiver(ForgeDirection.DOWN);
-			if(rec == null)
+			PowerReceiver rec = sink.getPowerReceiver(getFirstConnectDirection((TileEntity) sink));
+			if (rec == null)
 				continue;
 			int demand = (int) rec.powerRequest();
 			if (demand > rec.getMaxEnergyReceived())
@@ -270,22 +301,22 @@ public class System {
 		}
 		if (buffer.getBuffer() >= neededEnergy) {
 			for (IEnergySink sink : demandsEu.keySet())
-				sink.injectEnergyUnits(ForgeDirection.UP, buffer.pullFromBuffer(demandsEu.get(sink)) / RATIO_EU_ENERGY);
+				sink.injectEnergyUnits(getFirstConnectDirection((TileEntity) sink), buffer.pullFromBuffer(demandsEu.get(sink)) / RATIO_EU_ENERGY);
 			for (PowerReceiver sink : demandsMj.keySet())
 				sink.receiveEnergy(PowerHandler.Type.STORAGE, buffer.pullFromBuffer(demandsMj.get(sink))
-						/ RATIO_EU_ENERGY, ForgeDirection.DOWN);
+						/ RATIO_EU_ENERGY, ForgeDirection.UP);
 		}
 		else {
 			double ratio = neededEnergy / (buffer.getBuffer() * 1D);
 			if (ratio < 1)
 				return;
 			for (IEnergySink sink : demandsEu.keySet())
-				sink.injectEnergyUnits(ForgeDirection.UP,
+				sink.injectEnergyUnits(getFirstConnectDirection((TileEntity) sink),
 						buffer.pullFromBuffer((int) Math.floor(demandsEu.get(sink) / ratio / RATIO_EU_ENERGY)));
 			for (PowerReceiver sink : demandsMj.keySet())
 				sink.receiveEnergy(PowerHandler.Type.STORAGE,
 						buffer.pullFromBuffer((int) Math.floor(demandsMj.get(sink) / ratio / RATIO_MJ_ENERGY)),
-						ForgeDirection.DOWN);
+						ForgeDirection.UP);
 		}
 		if (oldBuffer != buffer.getBuffer())
 			sendUpdate();
@@ -305,5 +336,24 @@ public class System {
 	public void playerJoin(EntityPlayer player) {
 		PacketSerializableInfo p = new PacketSerializableInfo(PacketIDs.SYSTEM_UPDATE, renderInfo);
 		UniversalWire.proxy.sendToPlayer(player, p.getPacket());
+	}
+
+	private ForgeDirection getFirstConnectDirection(TileEntity tileEntity) {
+		if (tileEntity != null && isContaining(tileEntity)) {
+			Coordinate coord = new Coordinate(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord);
+			if (isContaining(coord.getTouching(ForgeDirection.DOWN)))
+				return ForgeDirection.DOWN;
+			if (isContaining(coord.getTouching(ForgeDirection.UP)))
+				return ForgeDirection.UP;
+			if (isContaining(coord.getTouching(ForgeDirection.WEST)))
+				return ForgeDirection.WEST;
+			if (isContaining(coord.getTouching(ForgeDirection.EAST)))
+				return ForgeDirection.EAST;
+			if (isContaining(coord.getTouching(ForgeDirection.NORTH)))
+				return ForgeDirection.NORTH;
+			if (isContaining(coord.getTouching(ForgeDirection.SOUTH)))
+				return ForgeDirection.SOUTH;
+		}
+		return ForgeDirection.UNKNOWN;
 	}
 }
