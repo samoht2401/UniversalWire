@@ -26,6 +26,7 @@ import samoht2401.universalwire.blocks.BlockRubberStill;
 import samoht2401.universalwire.blocks.BlockTank;
 import samoht2401.universalwire.blocks.FluidRubber;
 import samoht2401.universalwire.gui.GuiHandler;
+import samoht2401.universalwire.gui.GuiTankOverlay;
 import samoht2401.universalwire.network.UWPacketHandler;
 import samoht2401.universalwire.system.SystemManager;
 import samoht2401.universalwire.tileentity.TileEntityCable;
@@ -48,7 +49,7 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.4"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
+@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.5"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class UniversalWire implements ITickHandler {
 
@@ -104,6 +105,7 @@ public class UniversalWire implements ITickHandler {
 		GameRegistry.addShapedRecipe(new ItemStack(blockTank, 4), "G G", "G G", "GGG", 'G', Block.glass);
 
 		MinecraftForge.EVENT_BUS.register(this);
+		//MinecraftForge.EVENT_BUS.register(new GuiTankOverlay());
 		TickRegistry.registerTickHandler(this, Side.SERVER);
 	}
 
