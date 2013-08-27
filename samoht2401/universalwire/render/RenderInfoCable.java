@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import samoht2401.universalwire.network.ISerializable;
+import samoht2401.universalwire.util.FacadeMatrix;
 
 import net.minecraft.util.Icon;
 import net.minecraftforge.common.ForgeDirection;
@@ -18,6 +19,7 @@ public class RenderInfoCable implements ISerializable {
 	public int systemId;
 	public Icon[] textures;
 	public ArrayList<ForgeDirection> connections;
+	public FacadeMatrix facades;
 
 	@Override
 	public RenderInfoCable clone() {
@@ -28,6 +30,10 @@ public class RenderInfoCable implements ISerializable {
 		result.systemId = systemId;
 		result.textures = this.textures;
 		result.connections = new ArrayList<ForgeDirection>();
+		if (result.facades == null)
+			result.facades = new FacadeMatrix();
+		else
+			result.facades = facades.clone();
 		return result;
 	}
 
@@ -41,6 +47,7 @@ public class RenderInfoCable implements ISerializable {
 		for (ForgeDirection dir : connections) {
 			data.writeInt(dir.ordinal());
 		}
+		facades.writeData(data);
 	}
 
 	@Override
@@ -54,5 +61,7 @@ public class RenderInfoCable implements ISerializable {
 		for (int i = 0; i < coSize; i++) {
 			connections.add(ForgeDirection.getOrientation(data.readInt()));
 		}
+		facades = new FacadeMatrix();
+		facades.readData(data);
 	}
 }

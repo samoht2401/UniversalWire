@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import buildcraft.api.tools.IToolWrench;
+import buildcraft.transport.ItemFacade;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import samoht2401.universalwire.UniversalWire;
@@ -17,6 +18,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.src.ModLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.Icon;
@@ -37,6 +39,8 @@ public class BlockCable extends BlockContainer {
 	public final static float CABLE_MAX_SIZE = 11f * (1f / 16f);
 	public final static float LIQUID_OFFSET = 0.5f * (1f / 16f);
 
+	private Icon renderIcon;
+
 	public BlockCable(int id, Material mat) {
 		super(id, mat);
 		setHardness(2.0F);
@@ -44,6 +48,7 @@ public class BlockCable extends BlockContainer {
 		setCreativeTab(CreativeTabs.tabBlock);
 		genericRenderInfo = new RenderInfoCable();
 		resetBlockBound();
+		resetIcon();
 	}
 
 	@Override
@@ -59,6 +64,14 @@ public class BlockCable extends BlockContainer {
 	@Override
 	public Icon getIcon(int face, int meta) {
 		return genericRenderInfo.textures[CABLE_TEX_INDEX];
+	}
+
+	public void setRenderIcon(Icon icon) {
+		renderIcon = icon;
+	}
+
+	public void resetIcon() {
+		renderIcon = null;
 	}
 
 	@Override
@@ -117,15 +130,38 @@ public class BlockCable extends BlockContainer {
 	}
 
 	@Override
-	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int par6, float par7,
-			float par8, float par9) {
-		Item equipped = player.getCurrentEquippedItem() != null ? player.getCurrentEquippedItem().getItem() : null;
+	public boolean onBlockActivated(World world, int x, int y, int z, EntityPlayer player, int side, float xOffset,
+			float yOffset, float zOffset) {
+		ItemStack stack = player.getCurrentEquippedItem();
+		Item equipped = stack != null ? stack.getItem() : null;
 		if (equipped instanceof IToolWrench && ((IToolWrench) equipped).canWrench(player, x, y, z)) {
-			if(world.isRemote)
+			if (world.isRemote)
 				return true;
 			world.destroyBlock(x, y, z, true);
 			((IToolWrench) equipped).wrenchUsed(player, x, y, z);
 			return true;
+		}
+		if (ModLoader.isModLoaded("BuildCraft|Transport") && equipped instanceof ItemFacade) {
+			TileEntity tileEntity = world.getBlockTileEntity(x, y, z);
+			if (tileEntity instanceof TileEntityCable) {
+				TileEntityCable te = (TileEntityCable) tileEntity;
+				if (player.isSneaking()) { // Strip facade
+					if (!te.hasFacade(ForgeDirection.VALID_DIRECTIONS[side]))
+						return false;
+					te.dropFacade(ForgeDirection.VALID_DIRECTIONS[side]);
+					return true;
+				}
+				else {
+					if (te.addFacade(ForgeDirection.values()[side], ItemFacade.getBlockId(stack),
+							ItemFacade.getMetaData(stack))) {
+						if (!player.capabilities.isCreativeMode) {
+							stack.stackSize--;
+						}
+						return true;
+					}
+					return false;
+				}
+			}
 		}
 
 		return false;
@@ -168,6 +204,37 @@ public class BlockCable extends BlockContainer {
 				setBlockBounds(min, 0f, min, max, min, max);
 				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
 			}
+
+			float onePixel = 1f / 16f;
+			if (te.hasFacade(ForgeDirection.EAST)) {
+				setBlockBounds(1 - onePixel, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
+
+			if (te.hasFacade(ForgeDirection.WEST)) {
+				setBlockBounds(0.0F, 0.0F, 0.0F, onePixel, 1.0F, 1.0F);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
+
+			if (te.hasFacade(ForgeDirection.UP)) {
+				setBlockBounds(0.0F, 1 - onePixel, 0.0F, 1.0F, 1.0F, 1.0F);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
+
+			if (te.hasFacade(ForgeDirection.DOWN)) {
+				setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, onePixel, 1.0F);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
+
+			if (te.hasFacade(ForgeDirection.SOUTH)) {
+				setBlockBounds(0.0F, 0.0F, 1 - onePixel, 1.0F, 1.0F, 1.0F);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
+
+			if (te.hasFacade(ForgeDirection.NORTH)) {
+				setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, onePixel);
+				super.addCollisionBoxesToList(world, x, y, z, axisalignedbb, arraylist, entity);
+			}
 		}
 
 		resetBlockBound();
@@ -183,18 +250,38 @@ public class BlockCable extends BlockContainer {
 		if (tileEntity instanceof TileEntityCable) {
 			TileEntityCable te = (TileEntityCable) tileEntity;
 
-			if (te.getConnections().contains(ForgeDirection.NORTH))
+			if (te.getConnections().contains(ForgeDirection.NORTH) || te.hasFacade(ForgeDirection.NORTH))
 				zMin = 0f;
-			if (te.getConnections().contains(ForgeDirection.SOUTH))
+			if (te.getConnections().contains(ForgeDirection.SOUTH) || te.hasFacade(ForgeDirection.SOUTH))
 				zMax = 1f;
-			if (te.getConnections().contains(ForgeDirection.WEST))
+			if (te.getConnections().contains(ForgeDirection.WEST) || te.hasFacade(ForgeDirection.WEST))
 				xMin = 0f;
-			if (te.getConnections().contains(ForgeDirection.EAST))
+			if (te.getConnections().contains(ForgeDirection.EAST) || te.hasFacade(ForgeDirection.EAST))
 				xMax = 1f;
-			if (te.getConnections().contains(ForgeDirection.UP))
+			if (te.getConnections().contains(ForgeDirection.UP) || te.hasFacade(ForgeDirection.UP))
 				yMax = 1f;
-			if (te.getConnections().contains(ForgeDirection.DOWN))
+			if (te.getConnections().contains(ForgeDirection.DOWN) || te.hasFacade(ForgeDirection.DOWN))
 				yMin = 0f;
+			if (te.hasFacade(ForgeDirection.EAST) || te.hasFacade(ForgeDirection.WEST)) {
+				yMin = 0.0F;
+				yMax = 1.0F;
+				zMin = 0.0F;
+				zMax = 1.0F;
+			}
+
+			if (te.hasFacade(ForgeDirection.UP) || te.hasFacade(ForgeDirection.DOWN)) {
+				xMin = 0.0F;
+				xMax = 1.0F;
+				zMin = 0.0F;
+				zMax = 1.0F;
+			}
+
+			if (te.hasFacade(ForgeDirection.SOUTH) || te.hasFacade(ForgeDirection.NORTH)) {
+				xMin = 0.0F;
+				xMax = 1.0F;
+				yMin = 0.0F;
+				yMax = 1.0F;
+			}
 		}
 		return AxisAlignedBB.getBoundingBox((double) x + xMin, (double) y + yMin, (double) z + zMin, (double) x + xMax,
 				(double) y + yMax, (double) z + zMax);
@@ -207,6 +294,8 @@ public class BlockCable extends BlockContainer {
 		TileEntity tile = iblockaccess.getBlockTileEntity(x, y, z);
 		if (!(tile instanceof TileEntityCable))
 			return genericRenderInfo.textures[0];
+		if(renderIcon != null)
+			return renderIcon;
 		return ((TileEntityCable) tile).getCurrentTexture();
 	}
 

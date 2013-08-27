@@ -18,10 +18,13 @@ import samoht2401.universalwire.render.RenderInfoSystem;
 import samoht2401.universalwire.system.BufferManager;
 import samoht2401.universalwire.system.IEnergyBuffer;
 import samoht2401.universalwire.system.System;
+import samoht2401.universalwire.util.FacadeMatrix;
+import samoht2401.universalwire.util.ItemUtil;
 import buildcraft.api.power.IPowerReceptor;
 import buildcraft.api.power.PowerHandler;
 import buildcraft.api.power.PowerHandler.PowerReceiver;
 import buildcraft.api.power.PowerHandler.Type;
+import buildcraft.transport.ItemFacade;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -154,6 +157,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 		for (int i = 0; i < connect.length; i++)
 			connect[i] = renderInfo.connections.get(i).ordinal();
 		comp.setIntArray("Connections", connect);
+		renderInfo.facades.writeToNBT(comp);
 		// provider.writeToNBT(comp);
 
 		RenderInfoSystem ris = RenderInfoSystem.get(UniversalWire.systemManager.getSystemId(this));
@@ -175,6 +179,7 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 		int[] connect = comp.getIntArray("Connections");
 		for (int i = 0; i < connect.length; i++)
 			renderInfo.connections.add(ForgeDirection.getOrientation(connect[i]));
+		renderInfo.facades.readFromNBT(comp);
 		// provider.readFromNBT(comp);
 
 		if (comp.hasKey("renderInfoSystem")) {
@@ -226,4 +231,49 @@ public class TileEntityCable extends TileEntity implements ISynchronisable, IEne
 	public World getWorld() {
 		return worldObj;
 	}
+
+	public boolean hasFacade(ForgeDirection dir) {
+		return renderInfo.facades.hasFacade(dir);
+	}
+
+	public FacadeMatrix getFacadeMatrix() {
+		return renderInfo.facades;
+	}
+
+	public boolean addFacade(ForgeDirection dir, int blockid, int meta) {
+		if (this.worldObj.isRemote)
+			return false;
+		if (renderInfo.facades.getFacadeId(dir) == blockid)
+			return false;
+
+		if (hasFacade(dir))
+			ItemUtil.dropItems(worldObj,
+					ItemFacade.getStack(renderInfo.facades.getFacadeId(dir), renderInfo.facades.getFacadeMeta(dir)),
+					this.xCoord, this.yCoord, this.zCoord);
+
+		renderInfo.facades.setFacade(dir, blockid, meta);
+		worldObj.notifyBlockChange(this.xCoord, this.yCoord, this.zCoord, UniversalWire.blockCable.blockID);
+		updateData();
+		return true;
+	}
+
+	public void dropFacade(ForgeDirection dir) {
+		if (this.worldObj.isRemote)
+			return;
+		if (!hasFacade(dir))
+			return;
+		ItemUtil.dropItems(worldObj,
+				ItemFacade.getStack(renderInfo.facades.getFacadeId(dir), renderInfo.facades.getFacadeMeta(dir)),
+				this.xCoord, this.yCoord, this.zCoord);
+		renderInfo.facades.setFacade(dir, 0, 0);
+		worldObj.notifyBlockChange(this.xCoord, this.yCoord, this.zCoord, UniversalWire.blockCable.blockID);
+		updateData();
+	}
+
+	public boolean isConnected(ForgeDirection dir) {
+		if (renderInfo.connections == null)
+			return false;
+		return renderInfo.connections.contains(dir);
+	}
+
 }

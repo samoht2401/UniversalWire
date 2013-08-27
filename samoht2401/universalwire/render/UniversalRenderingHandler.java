@@ -2,15 +2,21 @@ package samoht2401.universalwire.render;
 
 import org.lwjgl.opengl.GL11;
 
+import buildcraft.BuildCraftTransport;
+import buildcraft.transport.PipeIconProvider;
+
 import samoht2401.universalwire.UniversalWire;
 import samoht2401.universalwire.blocks.BlockCable;
 import samoht2401.universalwire.blocks.BlockTank;
 import samoht2401.universalwire.tileentity.TileEntityCable;
 import samoht2401.universalwire.tileentity.TileEntityTank;
+import samoht2401.universalwire.util.FacadeMatrix;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.src.ModLoader;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
@@ -393,6 +399,124 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 				renderer.renderStandardBlockWithColorMultiplier(block, x, y, z, colorRatio, colorRatio, colorRatio);
 			}
 
+			// Facade
+			float onePixel = 1f / 16f;
+			float zFightOffset = 1f / 4096f;
+			FacadeMatrix facadeMatrix = te.getFacadeMatrix();
+
+			float[][] zeroState = new float[3][2];
+			// X START - END
+			zeroState[0][0] = 0.0F - zFightOffset / 2;
+			zeroState[0][1] = 1.0F + zFightOffset / 2;
+			// Y START - END
+			zeroState[1][0] = 0.0F - zFightOffset;
+			zeroState[1][1] = onePixel;
+			// Z START - END
+			zeroState[2][0] = 0.0F;
+			zeroState[2][1] = 1.0F;
+
+			for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+				int facadeId = facadeMatrix.getFacadeId(direction);
+				if (facadeId != 0) {
+					Block renderBlock = Block.blocksList[facadeId];
+					int renderMeta = facadeMatrix.getFacadeMeta(direction);
+					block.setRenderIcon(renderBlock.getIcon(direction.ordinal(), renderMeta));
+
+					if (renderBlock.getRenderType() == 31) {
+						if ((renderMeta & 12) == 4) {
+							renderer.uvRotateEast = 1;
+							renderer.uvRotateWest = 1;
+							renderer.uvRotateTop = 1;
+							renderer.uvRotateBottom = 1;
+						}
+						else if ((renderMeta & 12) == 8) {
+							renderer.uvRotateSouth = 1;
+							renderer.uvRotateNorth = 1;
+						}
+					}
+
+					// Hollow facade
+					if (te.isConnected(direction)) {
+						float[][] rotated = deepClone(zeroState);
+						rotated[2][0] = 0.0F;
+						rotated[2][1] = BlockCable.CABLE_MIN_SIZE - zFightOffset;
+						rotated[1][0] -= zFightOffset / 2;
+						transform(rotated, direction);
+						renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1],
+								rotated[1][1], rotated[2][1]);
+						renderer.renderStandardBlock(block, x, y, z);
+
+						rotated = deepClone(zeroState);
+						rotated[2][0] = BlockCable.CABLE_MAX_SIZE + zFightOffset;
+						rotated[1][0] -= zFightOffset / 2;
+						transform(rotated, direction);
+						renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1],
+								rotated[1][1], rotated[2][1]);
+						renderer.renderStandardBlock(block, x, y, z);
+
+						rotated = deepClone(zeroState);
+						rotated[0][0] = 0.0F;
+						rotated[0][1] = BlockCable.CABLE_MIN_SIZE - zFightOffset;
+						rotated[1][1] -= zFightOffset;
+						transform(rotated, direction);
+						renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1],
+								rotated[1][1], rotated[2][1]);
+						renderer.renderStandardBlock(block, x, y, z);
+
+						rotated = deepClone(zeroState);
+						rotated[0][0] = BlockCable.CABLE_MAX_SIZE + zFightOffset;
+						rotated[0][1] = 1F;
+						rotated[1][1] -= zFightOffset;
+						transform(rotated, direction);
+						renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1],
+								rotated[1][1], rotated[2][1]);
+						renderer.renderStandardBlock(block, x, y, z);
+					}
+					else { // Solid facade
+						float[][] rotated = deepClone(zeroState);
+						transform(rotated, direction);
+						renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1],
+								rotated[1][1], rotated[2][1]);
+						renderer.renderStandardBlock(block, x, y, z);
+					}
+
+					if (renderBlock.getRenderType() == 31) {
+						renderer.uvRotateSouth = 0;
+						renderer.uvRotateEast = 0;
+						renderer.uvRotateWest = 0;
+						renderer.uvRotateNorth = 0;
+						renderer.uvRotateTop = 0;
+						renderer.uvRotateBottom = 0;
+					}
+				}
+			}
+
+			// X START - END
+			zeroState[0][0] = BlockCable.CABLE_MIN_SIZE;
+			zeroState[0][1] = BlockCable.CABLE_MAX_SIZE;
+			// Y START - END
+			zeroState[1][0] = onePixel;
+			zeroState[1][1] = BlockCable.CABLE_MIN_SIZE;
+			// Z START - END
+			zeroState[2][0] = BlockCable.CABLE_MIN_SIZE;
+			zeroState[2][1] = BlockCable.CABLE_MAX_SIZE;
+
+			if (ModLoader.isModLoaded("BuildCraft|Transport"))
+				block.setRenderIcon(BuildCraftTransport.instance.pipeIconProvider
+						.getIcon(PipeIconProvider.TYPE.PipeStructureCobblestone.ordinal()));
+
+			for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+				if (facadeMatrix.getFacadeId(direction) != 0 && !te.isConnected(direction)) {
+					float[][] rotated = deepClone(zeroState);
+					transform(rotated, direction);
+
+					renderer.setRenderBounds(rotated[0][0], rotated[1][0], rotated[2][0], rotated[0][1], rotated[1][1],
+							rotated[2][1]);
+					renderer.renderStandardBlock(block, x, y, z);
+				}
+			}
+
+			block.resetIcon();
 			block.resetBlockBound();
 		}
 	}
@@ -937,5 +1061,38 @@ public class UniversalRenderingHandler implements ISimpleBlockRenderingHandler {
 			renderer.renderFaceZPos(block, x, y, z, icon);
 		}
 		GL11.glPopAttrib();
+	}
+
+	private float[][] deepClone(float[][] source) {
+		float[][] target = source.clone();
+		for (int i = 0; i < target.length; i++) {
+			target[i] = source[i].clone();
+		}
+		return target;
+	}
+
+	private void transform(float[][] targetArray, ForgeDirection direction) {
+		if ((direction.ordinal() & 0x1) == 1) {
+			mirrorY(targetArray);
+		}
+
+		for (int i = 0; i < (direction.ordinal() >> 1); i++) {
+			rotate(targetArray);
+		}
+	}
+
+	private void mirrorY(float[][] targetArray) {
+		float temp = targetArray[1][0];
+		targetArray[1][0] = (targetArray[1][1] - 0.5F) * -1F + 0.5F;
+		targetArray[1][1] = (temp - 0.5F) * -1F + 0.5F;
+	}
+
+	private void rotate(float[][] targetArray) {
+		for (int i = 0; i < 2; i++) {
+			float temp = targetArray[2][i];
+			targetArray[2][i] = targetArray[1][i];
+			targetArray[1][i] = targetArray[0][i];
+			targetArray[0][i] = temp;
+		}
 	}
 }
