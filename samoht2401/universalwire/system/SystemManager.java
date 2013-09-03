@@ -1,5 +1,6 @@
 package samoht2401.universalwire.system;
 
+import ic2.api.energy.tile.IEnergyConductor;
 import ic2.api.energy.tile.IEnergyEmitter;
 import ic2.api.energy.tile.IEnergySink;
 import ic2.api.energy.tile.IEnergyTile;
@@ -126,7 +127,8 @@ public class SystemManager {
 	public void addItem(World w, Coordinate coord, TileEntity tileEntity) {
 		if (w.isRemote)
 			return;
-		if (ModLoader.isModLoaded("IC2") && (tileEntity instanceof TileEntityTransformer))
+		if (ModLoader.isModLoaded("IC2")
+				&& (tileEntity instanceof TileEntityTransformer || tileEntity instanceof IEnergyConductor))
 			return;
 		if (isAnyContaining(w, coord))
 			return;
