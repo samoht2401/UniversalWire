@@ -76,16 +76,17 @@ public class UniversalWire implements ITickHandler {
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
+		Config.getOrCreateConfig(event.getSuggestedConfigurationFile());
 		systemManager = new SystemManager();
 		// Stub Method
-		blockRubberSmelter = new BlockRubberSmelter(1337);
-		fluidRubber = new FluidRubber(2400);
+		blockRubberSmelter = new BlockRubberSmelter(Config.blockRubberSmelterID);
+		fluidRubber = new FluidRubber(Config.fluidRubberID);
 		if(!FluidRegistry.registerFluid(fluidRubber))
 			fluidRubber = (FluidRubber) FluidRegistry.getFluid(fluidRubber.getName());
-		rubberStill = new BlockRubberStill(2400, Material.water).setUnlocalizedName("rubberStill");
+		rubberStill = new BlockRubberStill(Config.blockRubberStillID, Material.water).setUnlocalizedName("rubberStill");
 		rubberLiquid = new FluidStack(fluidRubber, 0);
-		blockCable = (BlockCable) new BlockCable(2401, Material.circuits).setUnlocalizedName("cable");
-		blockTank = (BlockTank) new BlockTank(2402, Material.glass).setUnlocalizedName("tank");
+		blockCable = (BlockCable) new BlockCable(Config.blockCableID, Material.circuits).setUnlocalizedName("cable");
+		blockTank = (BlockTank) new BlockTank(Config.blockTankID, Material.glass).setUnlocalizedName("tank");
 		GameRegistry.registerBlock(blockRubberSmelter, ItemBlock.class, "blockRubberSmelter");
 		GameRegistry.registerBlock(rubberStill, ItemBlock.class, "rubberStill");
 		GameRegistry.registerBlock(blockCable, ItemBlock.class, "cable");
