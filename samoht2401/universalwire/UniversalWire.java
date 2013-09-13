@@ -21,16 +21,12 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import samoht2401.universalwire.blocks.BlockCable;
-import samoht2401.universalwire.blocks.BlockRubberSmelter;
-import samoht2401.universalwire.blocks.BlockRubberStill;
 import samoht2401.universalwire.blocks.BlockTank;
-import samoht2401.universalwire.blocks.FluidRubber;
 import samoht2401.universalwire.gui.GuiHandler;
 import samoht2401.universalwire.gui.GuiTankOverlay;
 import samoht2401.universalwire.network.UWPacketHandler;
 import samoht2401.universalwire.system.SystemManager;
 import samoht2401.universalwire.tileentity.TileEntityCable;
-import samoht2401.universalwire.tileentity.TileEntityRubberSmelter;
 import samoht2401.universalwire.tileentity.TileEntityTank;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.Mod;
@@ -49,7 +45,7 @@ import cpw.mods.fml.common.registry.TickRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.5"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
+@Mod(modid = "UniversalWire", name = "Universal Wire", version = "1.0.6"/*, dependencies = "required-after:Forge@[7.8.0.725,);required-after:IC2;required-after:BuildCraft|Core"*/)
 @NetworkMod(clientSideRequired = true, serverSideRequired = false)
 public class UniversalWire implements ITickHandler {
 
@@ -60,15 +56,8 @@ public class UniversalWire implements ITickHandler {
 
 	public static int blockRenderId;
 
-	public static Block blockRubberSmelter;
-	public static Block rubberStill;
 	public static BlockCable blockCable;
 	public static BlockTank blockTank;
-
-	public static FluidStack rubberLiquid;
-	public static FluidRubber fluidRubber;
-
-	public static int rubberModel;
 
 	// Says where the client and server 'proxy' code is loaded.
 	@SidedProxy(clientSide = "samoht2401.universalwire.client.ClientProxy", serverSide = "samoht2401.universalwire.CommonProxy")
@@ -79,25 +68,14 @@ public class UniversalWire implements ITickHandler {
 		Config.getOrCreateConfig(event.getSuggestedConfigurationFile());
 		systemManager = new SystemManager();
 		// Stub Method
-		blockRubberSmelter = new BlockRubberSmelter(Config.blockRubberSmelterID);
-		fluidRubber = new FluidRubber(Config.fluidRubberID);
-		if(!FluidRegistry.registerFluid(fluidRubber))
-			fluidRubber = (FluidRubber) FluidRegistry.getFluid(fluidRubber.getName());
-		rubberStill = new BlockRubberStill(Config.blockRubberStillID, Material.water).setUnlocalizedName("rubberStill");
-		rubberLiquid = new FluidStack(fluidRubber, 0);
 		blockCable = (BlockCable) new BlockCable(Config.blockCableID, Material.circuits).setUnlocalizedName("cable");
 		blockTank = (BlockTank) new BlockTank(Config.blockTankID, Material.glass).setUnlocalizedName("tank");
-		GameRegistry.registerBlock(blockRubberSmelter, ItemBlock.class, "blockRubberSmelter");
-		GameRegistry.registerBlock(rubberStill, ItemBlock.class, "rubberStill");
 		GameRegistry.registerBlock(blockCable, ItemBlock.class, "cable");
 		GameRegistry.registerBlock(blockTank, ItemBlock.class, "tank");
-		GameRegistry.registerTileEntity(TileEntityRubberSmelter.class, "containerRubberSmelter");
 		GameRegistry.registerTileEntity(TileEntityCable.class, "containerCable");
 		GameRegistry.registerTileEntity(TileEntityTank.class, "containerTank");
 		NetworkRegistry.instance().registerGuiHandler(this, new GuiHandler());
 		NetworkRegistry.instance().registerChannel(new UWPacketHandler(), UWPacketHandler.CHANNEL);
-		LanguageRegistry.addName(blockRubberSmelter, "Rubber Smelter");
-		LanguageRegistry.addName(rubberStill, "Rubber Liquid");
 		LanguageRegistry.addName(blockCable, "Cable");
 		LanguageRegistry.addName(blockTank, "Tank");
 
